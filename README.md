@@ -1,5 +1,5 @@
 # Twista
-Twista is a __Twi__tter __st__reaming and __a__nalysis command line tool suite implemented in Python 3.6.
+Twista is a Twitter streaming and analysis command line tool suite implemented in Python 3.6.
 
 It provides the following command line tools:
 
