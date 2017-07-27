@@ -1,5 +1,5 @@
 # Twista
-Twista is a Twitter streaming and analysis command line tool suite implemented in Python 3.6. It provides the following features:
+Twista is a Twitter streaming and analysis command line tool suite implemented in Python 3.6. It provides the following core features:
 
 - to __crawl__ HTML pages for Twitter accounts,
 - to __collect__ Tweets (statuses, replies, retweets, replies) for a specified set of screennames,
