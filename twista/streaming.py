@@ -6,7 +6,7 @@ import re
 import json
 from urllib.parse import urljoin
 
-from twibot.analysis import Tweet
+from twista.analysis import Tweet
 
 JSON_INDENT = 3
 CHUNK_SIZE = 1000

@@ -1,7 +1,7 @@
 import json
 import argparse
 
-import twibot.streaming as twibot
+import twista.streaming as twibot
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--crawl', type=argparse.FileType('r'), help="Web pages to crawl for Twitter accounts (json format)", required=True)

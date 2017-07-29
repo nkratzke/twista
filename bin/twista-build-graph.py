@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import json
-from twibot.analysis import TwibotGraph
+from twista.analysis import TwistaGraph
 
 import argparse
 parser = argparse.ArgumentParser()
@@ -16,7 +16,7 @@ parser.add_argument('--propagate-tags', type=argparse.FileType('r'), help="")
 args = parser.parse_args()
 
 print("Building graph ... This may take some time ...")
-graph = TwibotGraph.build(pattern=args.input) #, only=lambda tweet: tweet.language() == 'de')
+graph = TwistaGraph.build(pattern=args.input) #, only=lambda tweet: tweet.language() == 'de')
 
 if args.hits:
     print("Calculating HITS metric ...")

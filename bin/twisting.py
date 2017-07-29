@@ -1,5 +1,5 @@
-from twibot.analysis import TwibotGraph
-from twibot import operator as on
+from twista.analysis import TwistaGraph
+from twista import operator as on
 
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
@@ -28,7 +28,7 @@ print(args)
 if args.color:
     party_color = json.loads(args.color.read())
 
-graph = TwibotGraph.load(args.graphfile)
+graph = TwistaGraph.load(args.graphfile)
 print(graph.info())
 
 command = ''
@@ -45,9 +45,9 @@ if args.answers:
     exit(1)
 
 if args.tweets:
-    from twibot.visualization import pie_plot
-    from twibot.visualization import line_plot
-    from twibot.visualization import timeline_plot
+    from twista.visualization import pie_plot
+    from twista.visualization import line_plot
+    from twista.visualization import timeline_plot
 
     freqs = graph.edges().frequencies(on=lambda e: e.type)
     fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(2, 3, figsize=size)
@@ -84,8 +84,8 @@ if args.top_retweeter > 0:
 # Relation of party supporters
 #
 if args.supporters:
-    from twibot.visualization import pie_plot
-    from twibot.visualization import timeline_plot
+    from twista.visualization import pie_plot
+    from twista.visualization import timeline_plot
 
     f, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=size)
 
@@ -116,9 +116,9 @@ if args.supporters:
 # User mentions and hashtags as word clouds of last n Hours
 #
 if args.cloud > 0:
-    from twibot.visualization import word_cloud
-    from twibot.visualization import pie_plot
-    from twibot.visualization import timeline_plot
+    from twista.visualization import word_cloud
+    from twista.visualization import pie_plot
+    from twista.visualization import timeline_plot
 
     f, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=size)
 
@@ -140,8 +140,8 @@ if args.cloud > 0:
 # Wenn heute Bundes-#tag-wahl wäre ...
 #
 if args.tag_timeline:
-    from twibot.visualization import pie_plot
-    from twibot.visualization import timeline_plot
+    from twista.visualization import pie_plot
+    from twista.visualization import timeline_plot
 
     parties = {
         '#cdu/#csu': '#000000',
@@ -185,8 +185,8 @@ if args.tag_timeline:
 #
 if args.top_tags > 0:
 
-    from twibot.visualization import pie_plot
-    from twibot.visualization import timeline_plot
+    from twista.visualization import pie_plot
+    from twista.visualization import timeline_plot
 
     top_n_tags = graph.edges().map(on.HASHTAGS).flatten().frequencies(top=args.top_tags)
 
@@ -211,8 +211,8 @@ if args.top_tags > 0:
 #
 if args.top_mentions > 0:
 
-    from twibot.visualization import pie_plot
-    from twibot.visualization import timeline_plot
+    from twista.visualization import pie_plot
+    from twista.visualization import timeline_plot
 
     top10_mentions = graph.edges().map(lambda e: e.usermentions).flatten().frequencies(top=args.top_mentions)
 
@@ -237,7 +237,7 @@ if args.top_mentions > 0:
 # Plot supporting twitter account over years
 #
 if args.account_timeline:
-    from twibot.visualization import line_plot
+    from twista.visualization import line_plot
     from datetime import datetime
     from dateutil import relativedelta
 

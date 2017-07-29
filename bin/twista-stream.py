@@ -3,7 +3,7 @@ import time
 import json
 from datetime import datetime
 
-import twibot.streaming as twibot
+import twista.streaming as twibot
 
 import argparse
 

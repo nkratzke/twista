@@ -209,7 +209,7 @@ class Node(Concept):
         return self.type == 'user'
 
     def categoryp(self):
-        return TwibotList(self.tag).frequencies(norm=True)
+        return TwistaList(self.tag).frequencies(norm=True)
 
     def category(self, fct=1.25):
         if not self.tag:
@@ -219,7 +219,7 @@ class Node(Concept):
             return self.tag[0]
 
         # fct threshold check
-        freqs = TwibotList(self.tag).frequencies()
+        freqs = TwistaList(self.tag).frequencies()
         m = max(freqs.values())
         avg = stat.mean(freqs.values())
         n = len(freqs.keys())
@@ -240,7 +240,7 @@ class Node(Concept):
                 nodes.append(Node(e.dest, self.graph))
             else:
                 print(node)
-        return TwibotList(nodes)
+        return TwistaList(nodes)
 
     def out_edges(self):
         edges = []
@@ -250,7 +250,7 @@ class Node(Concept):
                 edge['src'] = src
                 edge['dest'] = dest
                 edges.append(Edge(edge, self.graph))
-        return TwibotList(edges)
+        return TwistaList(edges)
 
     def in_nodes(self, via=lambda e: True):
         nodes = []
@@ -259,7 +259,7 @@ class Node(Concept):
                 #node = dict(self.graph.node[e.src])
                 #node[id] = e.src
                 nodes.append(Node(e.src, self.graph))
-        return TwibotList(nodes)
+        return TwistaList(nodes)
 
     def in_edges(self):
         edges = []
@@ -269,10 +269,10 @@ class Node(Concept):
                 edge['src'] = src
                 edge['dest'] = dest
                 edges.append(Edge(edge, self.graph))
-        return TwibotList(edges)
+        return TwistaList(edges)
 
 
-class TwibotGraph:
+class TwistaGraph:
 
     def __init__(self, g):
         self.graph = g
@@ -341,7 +341,7 @@ class TwibotGraph:
     @staticmethod
     def load(file):
         g = nx.read_gpickle(file)
-        return TwibotGraph(g)
+        return TwistaGraph(g)
 
     @staticmethod
     def add_to_graph(tweet, graph, last_observation_of):
@@ -482,11 +482,11 @@ class TwibotGraph:
                         continue
                     if only(tweet):
                         processed.add(tweet.id())
-                        TwibotGraph.add_to_graph(tweet, graph, last_observation_of)
+                        TwistaGraph.add_to_graph(tweet, graph, last_observation_of)
             except Exception as e:
                 print("Error processing file " + file + ": " + str(e))
 
-        return TwibotGraph(graph)
+        return TwistaGraph(graph)
 
     def info(self):
         return nx.info(self.graph)
@@ -578,7 +578,7 @@ class TwibotGraph:
                 # node = dict(self.graph.node[n])
                 # node['id'] = n
                 nodes.append(Node(n, self.graph))
-        return TwibotList(nodes)
+        return TwistaList(nodes)
 
     def edges(self):
         edges = []
@@ -587,23 +587,23 @@ class TwibotGraph:
             edge['src'] = src
             edge['dest'] = dest
             edges.append(Edge(edge, self.graph))
-        return TwibotList(edges)
+        return TwistaList(edges)
 
     def delete_node(self, label):
         self.graph.remove_node(label)
         return self
 
 
-class TwibotList:
+class TwistaList:
 
     def __init__(self, items):
         self.entries = items
 
     def __add__(self, items):
-        return TwibotList(self.items() + items.items())
+        return TwistaList(self.items() + items.items())
 
     def __sub__(self, items):
-        return TwibotList([entry for entry in self.entries if entry not in items.items()])
+        return TwistaList([entry for entry in self.entries if entry not in items.items()])
 
     def __getitem__(self, item):
         return self.entries[item]
@@ -618,7 +618,7 @@ class TwibotList:
         return self.entries
 
     def unique(self):
-        return TwibotList(list(set(self.entries)))
+        return TwistaList(list(set(self.entries)))
 
     def count(self):
         return len(self)
@@ -627,12 +627,12 @@ class TwibotList:
         flattened = []
         for entry in self.entries:
             flattened.extend(entry)
-        return TwibotList(flattened)
+        return TwistaList(flattened)
 
     def sample(self, n=1, p=None):
         if p:
             n = round(p * len(self.entries))
-        return TwibotList(random.sample(self.entries, k=n))
+        return TwistaList(random.sample(self.entries, k=n))
 
     def first(self):
         return self.entries[0]
@@ -709,14 +709,14 @@ class TwibotList:
             if attr in grouped:
                 grouped[attr].append(on(entry))
             else:
-                grouped[attr] = TwibotList([on(entry)])
+                grouped[attr] = TwistaList([on(entry)])
         return grouped
 
     def filter(self, predicate):
-        return TwibotList(list(filter(predicate, self.entries)))
+        return TwistaList(list(filter(predicate, self.entries)))
 
     def map(self, function):
-        return TwibotList(list(map(function, self.entries)))
+        return TwistaList(list(map(function, self.entries)))
 
     def reduce(self, operator):
         return reduce(operator, self.entries)
