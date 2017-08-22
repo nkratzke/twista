@@ -19,7 +19,7 @@ args = parser.parse_args()
 
 print("Building graph ... This may take some time ...")
 
-graph = TwistaGraph.build(pattern=args.input)
+graph = TwistaGraph.build(pattern=args.input, start=args.start_date, end=args.end_date)
 
 if args.hits:
     print("Calculating HITS metric ...")
