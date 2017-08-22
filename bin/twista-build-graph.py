@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import json
+from datetime import datetime
 from twista.analysis import TwistaGraph
 
 import argparse
@@ -10,13 +11,15 @@ parser.add_argument('--hits', action="store_true", help="Calculate HITS metric (
 parser.add_argument('--pagerank', action="store_true", help="Calculate pagerank metric")
 parser.add_argument('--degree-centrality', action="store_true", help="Calculate degree centrality metric (in/out degree)")
 parser.add_argument('--betweenness-centrality', action="store_true", help="Calculate betweenness centrality metric")
-
+parser.add_argument('--start-date', type=lambda d: datetime.strptime(d, '%Y-%m-%d'), default=datetime(year=1970, month=1, day=1))
+parser.add_argument('--end-date', type=lambda d: datetime.strptime(d, '%Y-%m-%d'), default=datetime.now())
 parser.add_argument('--propagate-tags', type=argparse.FileType('r'), help="")
 
 args = parser.parse_args()
 
 print("Building graph ... This may take some time ...")
-graph = TwistaGraph.build(pattern=args.input) #, only=lambda tweet: tweet.language() == 'de')
+
+graph = TwistaGraph.build(pattern=args.input)
 
 if args.hits:
     print("Calculating HITS metric ...")

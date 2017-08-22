@@ -461,12 +461,18 @@ class TwistaGraph:
 
 
     @staticmethod
-    def build(only=lambda tweet: True, pattern='chunk-*.json'):
-
+    def build(only=lambda tweet: True,
+              pattern='chunk-*.json',
+              start=datetime.datetime(year=1970, month=1, day=1),
+              end=datetime.datetime.now()
+              ):
         graph = nx.MultiDiGraph()
         graph.add_node('public', type='internal')
+
         last_observation_of = {}
         processed = set()
+        start_date = start.replace(tzinfo=pytz.UTC)
+        end_date = end.replace(tzinfo=pytz.UTC)
 
         files = glob.glob(pattern)
         for file in tqdm(files, desc="Loading"):
@@ -477,6 +483,10 @@ class TwistaGraph:
                     if tweet.is_deleted():
                         continue
                     if tweet.is_withheld():
+                        continue
+                    if tweet.created_at() < start_date:
+                        continue
+                    if tweet.created_at() > end_date:
                         continue
                     if tweet.id() in processed:
                         continue
