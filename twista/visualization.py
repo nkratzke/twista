@@ -142,9 +142,13 @@ def pie_plot(frequencies, ax=None, colors=None, title=''):
 
     if colors:
         cs = [colors[l] for l in labels]
-        axis.pie(fracs, labels=labels, colors=cs, autopct='%1.1f%%', startangle=90)
+        axis.pie(fracs, labels=labels, colors=cs, pctdistance=0.45, autopct='%1.0f%%', counterclock=False)
     else:
-        axis.pie(fracs, labels=labels, autopct='%1.1f%%', startangle=90)
+        axis.pie(fracs, labels=labels, pctdistance=0.45, autopct='%1.0f%%', counterclock=False)
+
+    circle = plt.Circle((0, 0), radius=0.55, color='white', fill=True)
+    axis.add_artist(circle)
+    #plt.setp(outside, width=0.5, edgecolor='white')
 
     return axis
 

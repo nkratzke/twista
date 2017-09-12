@@ -477,7 +477,8 @@ class TwistaGraph:
         files = glob.glob(pattern)
         for file in tqdm(files, desc="Loading"):
             try:
-                tweets_data = json.loads(open(file, encoding='utf-8').read())
+                content = open(file, encoding='utf-8', errors='replace').read()
+                tweets_data = json.loads(content)
                 for data in tweets_data:
                     tweet = Tweet(data)
                     if tweet.is_deleted():
