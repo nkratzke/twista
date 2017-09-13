@@ -5,4 +5,4 @@ Twista is a Twitter streaming and analysis command line tool suite implemented i
 - to __collect__ Tweets (statuses, replies, retweets, replies) for a specified set of screennames,
 - and to __transform__ collected chunks of Tweets into a [NetworkX](https://networkx.github.io/) graph for follow up analysis of observed Twitter interactions.
 
-More detailled usage information will be provided here. Stay tuned.
+How to use Twista for recording and analysis of Twitter stream can be found in the [Wiki](https://github.com/nkratzke/twista/wiki).
