@@ -11,10 +11,14 @@ setup(
     scripts=[
         'bin/twista-stream.py',
         'bin/twista-build-graph.py',
+        'bin/twista-enrich-graph.py',
         'bin/twista-crawl.py',
         'bin/twisting.py',
     ],
     packages=find_packages(),
+    data_files=[
+       ('twista', ['twista/data/SentiWS_v1.8c_Negative.txt', 'twista/data/SentiWS_v1.8c_Positive.txt'])
+    ],
     install_requires=[
         "bs4",
         "requests",
@@ -28,6 +32,7 @@ setup(
         "wordcloud",
         "stop-words",
         "networkx",
-        "tqdm"
+        "tqdm",
+        "treetaggerwrapper"
     ]
 )
