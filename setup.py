@@ -9,7 +9,7 @@ setup(
     author_email='nane@nkode.io',
     description='Twitter streaming and analysis',
     scripts=[
-        'bin/twista-stream.py',
+        'bin/twista-record.py',
         'bin/twista-build-graph.py',
         'bin/twista-enrich-graph.py',
         'bin/twista-crawl.py',
@@ -33,6 +33,7 @@ setup(
         "stop-words",
         "networkx",
         "tqdm",
-        "treetaggerwrapper"
+        "treetaggerwrapper",
+        "selenium"
     ]
 )
