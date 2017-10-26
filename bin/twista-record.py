@@ -23,9 +23,11 @@ parser.add_argument('--token_secret', type=str, help="Twitter API token secret",
 
 args = parser.parse_args()
 
+screen_names = []
 if args.follow:
     data = json.loads(args.follow.read())
-    screen_names = [name for name in [names for names in data.values()]][0]
+    for names in data.values():
+        screen_names.extend(names)
 
 ids = twibot.get_user_ids(
     key=args.key, secret=args.secret, token=args.token, token_secret=args.token_secret,

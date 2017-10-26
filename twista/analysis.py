@@ -662,14 +662,14 @@ class TwistaGraph:
 
     def nodes(self):
         nodes = []
-        for n in self.graph.nodes_iter():
+        for n in self.graph.nodes: #_iter():
             if self.graph.node[n]['type'] == 'user':
                 nodes.append(Node(n, self.graph))
         return TwistaList(nodes)
 
     def edges(self):
         edges = []
-        for src, dest, key, data in self.graph.edges_iter(data=True, keys=True):
+        for src, dest, key, data in self.graph.edges(data=True, keys=True):
             edge = dict(self.graph[src][dest][key])
             edge['src'] = src
             edge['dest'] = dest

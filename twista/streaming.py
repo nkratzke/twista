@@ -194,7 +194,6 @@ def get_user_ids(key="", secret="", token="", token_secret="", screen_names=[]):
     api = tweepy.API(auth)
 
     ids = []
-    print(screen_names)
     for name in set(screen_names):
         try:
             user = api.get_user(name)
