@@ -8,10 +8,12 @@ from urllib.parse import urljoin
 from selenium import webdriver
 import time
 import random
+import traceback
 
 from twista.analysis import Tweet
+from twista.analysis import TwistaList
 
-BROWSER = webdriver.Chrome()
+BROWSER = webdriver.PhantomJS()
 JSON_INDENT = 3
 CHUNK_SIZE = 1000
 
@@ -20,8 +22,13 @@ class StreamListener(tweepy.StreamListener):
 
     def __init__(self):
         self.tweets = []
-        self.tags = []
-        self.mentions = []
+        self.memory_mentions = []
+        self.memory_hashtags = []
+        self.memory_retweeters = []
+        self.memory_retweeteds = []
+        self.memory_quoters = []
+        self.memory_quoteds = []
+
         self.chunk_file = self.new_chunk()
 
     def new_chunk(self):
@@ -29,19 +36,81 @@ class StreamListener(tweepy.StreamListener):
         print("New chunk " + chunk)
         return chunk
 
-    def forget(self, portion=0.5):
-        self.mentions = random.sample(self.mentions, (int)(len(self.mentions) * (1 - portion)))
-        self.tags = random.sample(self.tags, (int)(len(self.tags) * (1 - portion)))
+    '''
+    Returns observed user mentions.
+    '''
+    def mentions(self):
+        return TwistaList(self.memory_mentions)
+
+    '''
+    Returns observed hashtags.
+    '''
+    def hashtags(self):
+        return TwistaList(self.memory_hashtags)
+
+    '''
+    Returns ids of observed retweeters.
+    '''
+    def retweeters(self):
+        return TwistaList(self.memory_retweeters)
+
+    '''
+    Returns ids of observed retweeted accounts.
+    '''
+    def retweeteds(self):
+        return TwistaList(self.memory_retweeteds)
+
+    '''
+    Returns ids of observed quoters.
+    '''
+    def quoters(self):
+        return TwistaList(self.memory_quoters)
+
+    '''
+    Returns ids of observed quoted accounts.
+    '''
+    def quoteds(self):
+        return self.memory_quoteds
+
+    def remember(self, mentions=1000, hashtags=1000, retweeters=1000, retweeteds=1000, quoters=1000, quoteds=1000):
+        if len(self.memory_mentions) > mentions:
+            self.memory_mentions = self.memory_mentions[-mentions:]
+
+        if len(self.memory_hashtags) > hashtags:
+            self.memory_hashtags = self.memory_hashtags[-hashtags:]
+
+        if len(self.memory_retweeters) > retweeters:
+            self.memory_retweeters = self.memory_retweeters[-retweeters:]
+
+        if len(self.memory_retweeteds) > retweeteds:
+            self.memory_retweeteds = self.memory_retweeteds[-retweeteds:]
+
+        if len(self.memory_quoters) > quoters:
+            self.memory_quoters = self.memory_quoters[-quoters:]
+
+        if len(self.memory_quoteds) > quoteds:
+            self.memory_quoteds = self.memory_quoteds[-quoteds]
 
     def on_data(self, raw_data):
         try:
             data = json.loads(raw_data)
+
             tweet = Tweet(data)
 
             if not tweet.is_deleted() and not tweet.is_withheld():
                 print(tweet.user().screen_name() + ": " + tweet.text())
-                self.mentions.extend(tweet.user_mentions())
-                self.tags.extend(tweet.hashtags())
+
+                if tweet.retweeted_status():
+                    self.memory_retweeters.append(tweet.user().id())
+                    self.memory_retweeteds.append(tweet.retweeted_status().user().id())
+
+                if tweet.quoted_status():
+                    self.memory_quoters.append(tweet.user().id())
+                    self.memory_quoteds.append(tweet.quoted_status().user().id())
+
+                self.memory_mentions += tweet.user_mentions()
+                self.memory_hashtags += tweet.hashtags()
+
                 self.tweets.append(data)
                 fo = open(self.chunk_file, "w")
                 fo.write(json.dumps(self.tweets, indent=JSON_INDENT))
@@ -125,6 +194,7 @@ def get_user_ids(key="", secret="", token="", token_secret="", screen_names=[]):
     api = tweepy.API(auth)
 
     ids = []
+    print(screen_names)
     for name in set(screen_names):
         try:
             user = api.get_user(name)
@@ -135,11 +205,22 @@ def get_user_ids(key="", secret="", token="", token_secret="", screen_names=[]):
     return ids
 
 
-def stream(key="", secret="", token="", token_secret="", follow=[]):
+def stream(key="", secret="", token="", token_secret="", follow=None, track=None, language='de'):
     auth = tweepy.OAuthHandler(key, secret)
     auth.set_access_token(token, token_secret)
     api = tweepy.API(auth)
 
     stream = tweepy.Stream(auth=api.auth, listener=StreamListener())
-    stream.filter(follow=follow, async=True) #TODO: Add a replies='all' ???
+
+    if follow:
+        print("Following: " + str(follow))
+        stream.filter(follow=follow, languages=[language], async=True)
+        return stream
+
+    if track:
+        print("Tracking: " + str(track))
+        stream.filter(track=track, languages=[language], async=True)
+        return stream
+
+    stream.sample(languages=[language], async=True)
     return stream

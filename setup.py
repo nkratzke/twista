@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='Twista',
-    version='0.0.4',
+    version='0.2.0',
     url='https://github.com/nkratzke/twista',
     license='MIT',
     author='Nane Kratzke',
