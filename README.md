@@ -8,7 +8,7 @@ Twista is a Twitter streaming and analysis command line tool suite implemented i
 
 ## Check the Wiki
 
-How to use Twista for recording and analysis of Twitter streams can be found in the [Wiki](https://github.com/nkratzke/twista/wiki).
+It is recommended to study the [Wiki](https://github.com/nkratzke/twista/wiki) how to use Twista for recording and analysis of Twitter streams. 
 
 ## Twista passed its acid-test
 
