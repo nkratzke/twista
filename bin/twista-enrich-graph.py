@@ -11,7 +11,7 @@ parser.add_argument('--pagerank', action="store_true", help="Calculate pagerank 
 parser.add_argument('--degree-centrality', action="store_true", help="Calculate degree centrality metric (in/out degree)")
 parser.add_argument('--betweenness-centrality', action="store_true", help="Calculate betweenness centrality metric")
 parser.add_argument('--lemmatize', action="store_true", help="Lemmatize all Tweets using part-of-speech tagging")
-parser.add_argument('--propagate-tags', type=argparse.FileType('r'), help="Label nodes and propagte these labels")
+parser.add_argument('--propagate-tags', type=argparse.FileType('r'), help="Label an initial set of nodes and propagate these labels along retweeting edges")
 
 args = parser.parse_args()
 

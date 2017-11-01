@@ -5,15 +5,10 @@ import requests
 import re
 import json
 from urllib.parse import urljoin
-from selenium import webdriver
-import time
-import random
-import traceback
 
 from twista.analysis import Tweet
 from twista.analysis import TwistaList
 
-BROWSER = webdriver.PhantomJS()
 JSON_INDENT = 3
 CHUNK_SIZE = 1000
 
@@ -126,25 +121,15 @@ class StreamListener(tweepy.StreamListener):
             print("Error while parsing: " + raw_data)
 
 
-def load(url, scrolldown=10, js_enabled=False):
-    print(url + ": " + str(js_enabled))
-    if js_enabled:
-        BROWSER.get(url)
-        time.sleep(1)
-        for i in range(0, scrolldown):
-            BROWSER.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            time.sleep(1)
+def load(url):
+    res = requests.get(url)
+    return res.text
 
-        return BROWSER.page_source
-    else:
-        res = requests.get(url)
-        return res.text
-
-def crawl_for_screennames(url, js_enabled=False):
+def crawl_for_screennames(url):
     print("Crawling " + url)
     screennames = []
     #res = requests.get(url)
-    html = load(url, js_enabled=js_enabled)
+    html = load(url)
     #soup = bs4.BeautifulSoup(res.text, 'html5lib')
     soup = bs4.BeautifulSoup(html, 'html5lib')
     for link in soup.select('a[href^=http://twitter.com/], a[href^=https://twitter.com/], a[href^=http://www.twitter.com/], a[href^=https://www.twitter.com/]'):
@@ -155,7 +140,8 @@ def crawl_for_screennames(url, js_enabled=False):
         href = href.replace('twitter.com/', '')
 
         screenname = re.findall(r"[A-Za-z0-9_]+", href)[0]
-        if not screenname in ['flickr', 'signup', 'privacy', 'share', 'home']:
+        screenname = screenname.lower()
+        if not screenname in ['flickr', 'signup', 'privacy', 'share', 'home', 'intent', 'search']:
             print("Found @" + screenname)
             screennames.append(screenname)
 
@@ -163,25 +149,24 @@ def crawl_for_screennames(url, js_enabled=False):
 
 visited = []
 
-def crawl(url, n=0, js_enabled=False):
+def crawl(url, n=0):
     if url in visited:
         print("Skipping " + url + ": Already visited.")
         return []
 
-    screennames = crawl_for_screennames(url, js_enabled=js_enabled)
+    screennames = crawl_for_screennames(url)
     visited.append(url)
     if n == 0:
         return list(set(screennames))
 
     #res = requests.get(url)
-    html = load(url, js_enabled=js_enabled)
+    html = load(url)
     #soup = bs4.BeautifulSoup(res.text, 'html5lib')
     soup = bs4.BeautifulSoup(html, 'html5lib')
     for link in soup.select('a[href]'):
-        print(link.get('href'))
         follow_url = urljoin(url, link.get('href'))
         try:
-            screennames += crawl(follow_url, n - 1, js_enabled=js_enabled)
+            screennames += crawl(follow_url, n - 1)
         except:
             print("Error crawling url " + follow_url)
 

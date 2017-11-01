@@ -1,7 +1,7 @@
 import json
 import argparse
 
-import twista.streaming as twibot
+import twista.streaming as crawler
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--crawl', type=argparse.FileType('r'), help="Web pages to crawl for Twitter accounts (json format)", required=True)
@@ -13,12 +13,9 @@ crawl = json.loads(args.crawl.read())
 
 follow = {}
 for category, links in crawl.items():
-    follow[category] = []
+    screennames = []
     for link in links:
-        if 'js_enabled' in link:
-            js = link['js_enabled']
-        else:
-            js = False
-        follow[category].extend(twibot.crawl(link['url'], link['follow_depth'], js_enabled=js))
+        screennames.extend(crawler.crawl(link['url'], link['follow_depth']))
+    follow[category] = list(set([sn.lower() for sn in screennames]))
 
 json.dump(follow, args.out, indent=3)
