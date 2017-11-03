@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='Twista',
-    version='0.2.1',
+    version='0.2.2',
     url='https://github.com/nkratzke/twista',
     license='MIT',
     author='Nane Kratzke',
@@ -13,8 +13,7 @@ setup(
         'bin/twista-record.py',
         'bin/twista-build-graph.py',
         'bin/twista-enrich-graph.py',
-        'bin/twista-crawl.py',
-        'bin/twisting.py',
+        'bin/twista-crawl.py'
     ],
     packages=find_packages(),
     data_files=[

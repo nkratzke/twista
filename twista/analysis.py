@@ -8,6 +8,7 @@ import numpy as np
 import networkx as nx
 from tqdm import tqdm
 from dateutil import parser
+from newspaper import Article
 
 import json
 import html
@@ -185,6 +186,26 @@ class Edge(Concept):
     # TODO: Is that still necessary?
     def initiated_reply(self):
         return self.type == 'initiatedreply'
+
+    '''
+    Retrieves texts from URLs.
+    Warning. This is a heavy oepration and involves network access.
+    Referenced texts are not stored in the graph but most be loaded from the provided URLs.
+    :return List of texts from urls
+    '''
+    def texts(self, filter_url=lambda u: "twitter" not in u):
+        downloads = []
+        urls = [url for url in self.urls if filter_url(url)]
+        for url in urls:
+            try:
+                article = Article(url=url, lang=self.lang)
+                article.download()
+                article.parse()
+                downloads.append(article.text)
+            except:
+                print("Error processing URL %s" % url)
+
+        return TwistaList(downloads)
 
     def propagated(self, fct=1.25):
         return self.src_node().category(fct=fct)

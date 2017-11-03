@@ -1,6 +1,7 @@
 from pkg_resources import resource_filename
 from twista.analysis import TwistaList
 import treetaggerwrapper
+from newspaper import Article
 
 TAGGER = {
     'de': treetaggerwrapper.TreeTagger(TAGLANG='de'),
@@ -105,4 +106,3 @@ Returns all lemmas of a text using part-of-speech tagging.
 '''
 def lemmatize(text, lang='de'):
     return pos_tagging(text, lang=lang).map(lambda t: t.lemma)
-
