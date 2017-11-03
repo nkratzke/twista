@@ -94,7 +94,7 @@ def nouns(text, lang='de'):
     return pos_tagging(text, lang=lang)\
         .filter(lambda t: t.pos in NOUN_TAGS[lang])\
         .map(lambda t: t.lemma)\
-        .filter(lambda n: n not in ['RT', 'replaced-dns'])
+        .filter(lambda n: n.lower() not in ['rt', 'replaced-dns', 'replaced-url', 'ht', 'http', 'https'])
 
 
 '''

@@ -53,11 +53,13 @@ while True:
         if not tracking:
             tracking = twibot.stream(key=args.key, secret=args.secret, token=args.token, token_secret=args.token_secret, language=args.language, follow=ids)
 
+        time.sleep(60 * 60)
+
         if datetime.now().hour == 2:
             print("Disconnecting")
             tracking.disconnect()
             time.sleep(30)
-            following = None
+            tracking = None
 
     except Exception as ex:
         print("Stream malfunction due to " + str(ex))

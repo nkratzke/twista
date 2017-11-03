@@ -108,7 +108,7 @@ class Tweet(Concept):
 
     def user_mentions(self):
         if 'entities' not in self.raw_data: return []
-        return [user['screen_name'] for user in self.raw_data['entities']['user_mentions']]
+        return [user['screen_name'].lower() for user in self.raw_data['entities']['user_mentions']]
 
     def has_hashtags(self):
         return len(self.hashtags()) > 0
@@ -137,6 +137,11 @@ class Tweet(Concept):
         else:
             return None
 
+    '''
+    Returns a list of inner tweets encoded in this tweet.
+    This might be quoted tweets or retweeted tweets.
+    :return List of inner tweets
+    '''
     def inner_tweets(self):
         tweets = []
         retweeted = self.retweeted_status()
@@ -382,7 +387,8 @@ class TwistaGraph:
                     lang=tweet.language(),
                     propagated=[],
                     usermentions=tweet.user_mentions(),
-                    hashtags=tweet.hashtags()
+                    hashtags=tweet.hashtags(),
+                    urls=tweet.urls()
                 )
                 return
 
@@ -412,8 +418,9 @@ class TwistaGraph:
                     lang=tweet.language(),
                     propagated=[],
                     usermentions=tweet.user_mentions(),
-                    hashtags=tweet.hashtags()
-                )
+                    hashtags=tweet.hashtags(),
+                    urls=tweet.urls()
+                    )
 
                 return
 
@@ -445,7 +452,8 @@ class TwistaGraph:
                     lang=tweet.language(),
                     propagated=[],
                     usermentions=tweet.user_mentions(),
-                    hashtags=tweet.hashtags()
+                    hashtags=tweet.hashtags(),
+                    urls=tweet.urls()
                 )
 
                 return
@@ -477,7 +485,8 @@ class TwistaGraph:
                                lang=tweet.language(),
                                propagated=[],
                                usermentions=tweet.user_mentions(),
-                               hashtags=tweet.hashtags()
+                               hashtags=tweet.hashtags(),
+                               urls=tweet.urls()
                                )
 
                 return
@@ -785,3 +794,11 @@ class TwistaList:
 
     def as_list(self):
         return self.entries
+
+    '''
+    Returns a JSON representation (if the entries of the list are JSON serializable)
+    :param indent Indention for pretty printing (defaults to 3)
+    :return JSON string
+    '''
+    def as_json(self, indent=3):
+        return json.dumps(self.entries, indent=indent)

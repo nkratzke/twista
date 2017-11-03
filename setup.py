@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='Twista',
-    version='0.2.1',
+    version='0.2.2',
     url='https://github.com/nkratzke/twista',
     license='MIT',
     author='Nane Kratzke',
@@ -31,5 +31,7 @@ setup(
         "networkx          >= 2.0,  < 2.1",
         "tqdm              >= 4.19, < 4.20",
         "treetaggerwrapper >= 2.2,  < 2.3",
+        "gensim            >= 3.0,  < 3.1",
+        "newspaper3k       >= 0.2,  < 0.3"
     ]
 )
