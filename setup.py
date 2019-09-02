@@ -11,8 +11,7 @@ setup(
     description='Twitter streaming and graph-based analysis framework',
     python_requires=">=3.6,<4.0",
     scripts=[
-        'bin/twista',
-        'bin/twista-recorder'
+        'bin/twista'
     ],
     packages=find_packages(),
     install_requires=[
