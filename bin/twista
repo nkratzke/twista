@@ -1,0 +1,110 @@
+#!/usr/bin/env python3
+
+import click
+import json
+import time
+import tweepy
+import os
+import subprocess
+import urllib
+import tarfile
+import nbformat as nbf
+from pathlib import Path
+from neo4j import GraphDatabase, basic_auth, exceptions
+from tqdm import tqdm
+from twista import neo4j, recorder, jupyter
+
+@click.group()
+def cli():
+    """Twista is Twitter stream recording and analysis solution."""
+    pass
+
+@cli.command()
+@click.option('--config', default='config.json', type=click.Path(dir_okay=False), help='Config file to initialize (defaults to config.json)')
+@click.option('--consumer-key', default='PLEASE INSERT', help='Twitter API consumer key')
+@click.option('--consumer-secret', default='PLEASE INSERT', help='Twitter API consumer secret')
+@click.option('--access-token', default='PLEASE INSERT', help='Twitter API access token')
+@click.option('--access-token-secret', default='PLEASE INSERT', help='Twitter API access token')
+@click.option('--neo4j-url', default='bolt://localhost:7687', help='Neo4j url used for imports')
+@click.option('--neo4j-usr', default='neo4j', help='Neo4j user used for imports')
+@click.option('--neo4j-pwd', default='PLEASE INSERT', help='Neo4j password used for imports')
+@click.option('--with-neo4j', is_flag=True, help='Install Neo4j (default: no install)')
+def init(config, consumer_key, consumer_secret, access_token, access_token_secret, neo4j_url, neo4j_usr, neo4j_pwd, with_neo4j):
+    """
+    Initializes a directory to be used with Twista by creating
+    a credentials.json file in the current directory.\n
+    \n
+    The values can be set directly using the command options.
+    Or the created file can be edited otherwise after creation.
+    """
+
+    if not Path(config).exists():
+        with open(config, "w") as file:
+            data = {
+                'consumer_key': consumer_key,
+                'consumer_secret': consumer_secret,
+                'access_token': access_token,
+                'access_token_secret': access_token_secret,
+                'neo4j_url': neo4j_url,
+                'neo4j_usr': neo4j_usr,
+                'neo4j_pwd': neo4j_pwd
+            }
+            json.dump(data, file, indent=4)
+
+    if not Path('analysis.ipynb').exists():
+        nbf.write(jupyter.notebook(config), 'analysis.ipynb')
+
+    if with_neo4j:
+        neo4j.install_neo4j(config)
+
+@cli.command()
+@click.option('--config', default='config.json', type=click.Path(dir_okay=False), help='Config file used for Twiter API access (defaults to config.json)')
+@click.option('--chunk', default=50000, help='How many different entities to be stored in one record (defaults to 50000)')
+@click.option('--languages', default='de', help='Comma-separated list of languages to record (defaults to "de")')
+@click.option('--tracks', default='a,e,i,o,u,n', help='Comma-separated list of search terms to record (defaults to "a,e,i,o,u,n")')
+def record(config, chunk, languages, tracks):
+    """Records a Twitter stream"""
+    with open(config) as file:
+        settings = json.load(file)
+        langs = [l.strip() for l in languages.split(",")]
+        needles = [l.strip() for l in tracks.split(",")]
+    click.echo(f"Recording: tracks => {needles}, languages => {langs}")
+    recorder.recording(settings, chunk, langs, needles)
+
+@cli.command("import")
+@click.option('--config', default='config.json', type=click.Path(dir_okay=False), help='Config file used for Neo4j access (defaults to config.json)')
+@click.argument('records', nargs=-1)
+def importing(config, records):
+    """Imports Twitter records into a Neo4j graph database for analysis purposes."""
+    try:
+        neo4j.start_neo4j(config)
+        click.echo(f"Considering {len(records)} records (this may take some time ...)")
+        with open(config) as file:
+            settings = json.load(file)
+            driver = GraphDatabase.driver(settings['neo4j_url'], auth=(settings['neo4j_usr'], settings['neo4j_pwd']))
+            graph = driver.session()
+            neo4j.import_records(graph, sorted(records))
+            driver.close()
+    except KeyError as ex:
+        raise(click.UsageError(f"Key { ex } missing in file { config }"))
+    except FileNotFoundError as ex:
+        raise(click.UsageError(f"Config file not found. {ex}"))
+    except (exceptions.ServiceUnavailable, exceptions.SecurityError) as neo4j_ex:
+        raise(click.UsageError(f"{ neo4j_ex }\nCheck your database config parameters in { config }."))
+
+@cli.command()
+@click.option('--config', default='config.json', type=click.Path(dir_okay=False), help='Config file used for Neo4j access (defaults to config.json)')
+def lab(config):
+    """Starts Jupyter lab for analysis"""
+    neo4j.start_neo4j(config)
+    click.echo("Starting Jupyter lab")
+    os.system("jupyter lab")
+
+@cli.command()
+def stop():
+    """Stops the Neo4j database"""
+    neo4j.stop_neo4j()
+
+cli = click.CommandCollection(sources=[cli])
+if __name__ == '__main__':
+    cli()
