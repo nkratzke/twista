@@ -1,36 +1,30 @@
 from setuptools import setup, find_packages
+import twista
 
 setup(
     name='Twista',
-    version='0.2.2',
+    version=twista.VERSION,
     url='https://github.com/nkratzke/twista',
     license='MIT',
     author='Nane Kratzke',
-    author_email='nane@nkode.io',
-    description='Twitter streaming and analysis',
-    python_requires=">=3.6,<3.7",
+    author_email='nane.kratzke@th-luebeck.de',
+    description='Twitter streaming and graph-based analysis framework',
+    python_requires=">=3.6,<4.0",
     scripts=[
-        'bin/twista-record.py',
-        'bin/twista-build-graph.py',
-        'bin/twista-enrich-graph.py',
-        'bin/twista-crawl.py'
+        'bin/twista',
+        'bin/twista-recorder'
     ],
     packages=find_packages(),
-    data_files=[
-       ('twista', ['twista/data/SentiWS_v1.8c_Negative.txt', 'twista/data/SentiWS_v1.8c_Positive.txt'])
-    ],
     install_requires=[
-        "beautifulsoup4    >= 4.6,  < 4.7",
-        "requests          >= 2.18, < 2.19",
-        "tweepy            >= 3.5,  < 3.6",
-        "numpy             >= 1.13, < 1.14",
-        "python-dateutil   >= 2.6,  < 2.7",
-        "matplotlib        >= 2.1,  < 2.2",
-        "wordcloud         >= 1.3,  < 1.4",
-        "networkx          >= 2.0,  < 2.1",
-        "tqdm              >= 4.19, < 4.20",
-        "treetaggerwrapper >= 2.2,  < 2.3",
-        "gensim            >= 3.0,  < 3.1",
-        "newspaper3k       >= 0.2,  < 0.3"
+        "certifi",
+        "click             >= 7.0,  < 8.0",
+        "tweepy            >= 3.5,  < 4.0",
+        "python-dateutil   >= 2.6,  < 3.0",
+        "tqdm              >= 4.35, < 5.0",
+        "neo4j             >= 1.7,  < 2.0",
+        "termcolor         >= 1.1,  < 1.2",
+        "jupyterlab        >= 1.1,  < 2.0",
+        "matplotlib        >= 3.1,  < 4.0",
+        "py2neo            >= 4.3,  < 5.0"
     ]
 )
