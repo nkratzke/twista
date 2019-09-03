@@ -12,7 +12,7 @@ import nbformat as nbf
 from pathlib import Path
 from neo4j import GraphDatabase, basic_auth, exceptions
 from tqdm import tqdm
-from twista import neo4j, recorder, jupyter
+from twista import neo4j, recorder, jupyter, VERSION
 
 @click.group()
 def cli():
@@ -104,6 +104,11 @@ def lab(config):
 def stop():
     """Stops the Neo4j database"""
     neo4j.stop_neo4j()
+
+@cli.command()
+def version():
+    """Reports the version of Twista"""
+    click.echo(VERSION)
 
 cli = click.CommandCollection(sources=[cli])
 if __name__ == '__main__':

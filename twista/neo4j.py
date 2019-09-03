@@ -85,7 +85,7 @@ def import_records(graph, records):
     graph.run("CREATE INDEX ON :Tweet(type)")
     graph.run("CREATE CONSTRAINT ON (r:User) ASSERT r.id IS UNIQUE")
     graph.run("CREATE INDEX ON :User(created_at)")
-    graph.run("CREATE INDEX ON :User(screen_name")
+    graph.run("CREATE INDEX ON :User(screen_name)")
     graph.run("CREATE CONSTRAINT ON (t:Tag) ASSERT t.id IS UNIQUE")
     graph.run("CREATE CONSTRAINT ON (u:Url) ASSERT u.id IS UNIQUE")
     graph.sync()
