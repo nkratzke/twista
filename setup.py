@@ -11,9 +11,11 @@ setup(
     description='Twitter streaming and graph-based analysis framework',
     python_requires=">=3.6,<4.0",
     scripts=[
-        'bin/twista'
+        'bin/twista',
+        # 'bin/twista-navigator.py'
     ],
     packages=find_packages(),
+    include_package_data=True,
     install_requires=[
         "certifi",
         "click             >= 7.0,  < 8.0",
@@ -24,6 +26,7 @@ setup(
         "termcolor         >= 1.1,  < 1.2",
         "jupyterlab        >= 1.1,  < 2.0",
         "matplotlib        >= 3.1,  < 4.0",
-        "py2neo            >= 4.3,  < 5.0"
+        "py2neo            >= 4.3,  < 5.0",
+        "flask             >= 1.1,  < 1.2"
     ]
 )
