@@ -12,7 +12,7 @@ import nbformat as nbf
 from pathlib import Path
 from neo4j import GraphDatabase, basic_auth, exceptions
 from tqdm import tqdm
-from twista import neo4j, recorder, jupyter
+from twista import neo4j, recorder, jupyter, VERSION
 import twista.navigator as nav
 
 @click.group()
@@ -105,6 +105,11 @@ def lab(config):
 def stop():
     """Stops the Neo4j database"""
     neo4j.stop_neo4j()
+
+@cli.command()
+def version():
+    """Reports the version of Twista"""
+    click.echo(VERSION)
 
 @cli.command()
 @click.option('--config', default='config.json', type=click.Path(dir_okay=False), help='Config file used for Neo4j access and navigator settings (defaults to config.json)')

@@ -4,29 +4,23 @@ Twista is a Twitter streaming and analysis command line tool suite implemented i
 - to __record__ Tweets (statuses, replies, retweets, replies) from the public Twitter streaming API in a standardized way,
 - to __import__ collected chunks of Tweets into a [Neo4j](https://neo4j.com/) graph database for analysis.
 - The graph database can be used for analysis. We recommand to make use of tools like [Jupyter](https://jupyter.org).
+  Twista provides integrated support for Jupyter. Try the `twista lab` command to start Jupyter with the current config file.
 
 ## Installation
 
-First, clone the Twista repository using git.
+Twista is hosted on [PyPi](). Therefore, it can be easily installed:
 
 ```
-git clone https://github.com/nkratzke/twista.git
+pip3 install twista
 ```
 
-Then change into this repository and install it using pip3.
-
-```
-cd twista
-pip3 install .
-```
-
-Twista provides now the following commands
+Type
 
 ```
 $ twista
 ```
 
-will return
+to get an overview of existing Twista commands.
 
 ```
 Usage: twista [OPTIONS] COMMAND [ARGS]...
@@ -35,9 +29,11 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  import  Imports Twitter records into a Neo4j graph database for analysis...
-  init    Initializes a directory to be used with Twista by creating a...
+  import  Imports Twitter records into a Neo4j graph analytical database ...
+  init    Initializes a directory to be used with Twista ...
+  lab     Starts Jupyter lab for analysis
   record  Records a Twitter stream
+  stop    Stops the Neo4j analytical database
 ```
 
 We recommend to study the [Wiki]() on how to record and analyze public Twitter streams using Twista and graph databases.

@@ -1,14 +1,19 @@
 from setuptools import setup, find_packages
 import twista
 
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
 setup(
-    name='Twista',
+    name=twista.name,
     version=twista.VERSION,
     url='https://github.com/nkratzke/twista',
     license='MIT',
     author='Nane Kratzke',
     author_email='nane.kratzke@th-luebeck.de',
     description='Twitter streaming and graph-based analysis framework',
+    long_description_content_type="text/markdown",
+    long_description=long_description,
     python_requires=">=3.6,<4.0",
     scripts=[
         'bin/twista',
