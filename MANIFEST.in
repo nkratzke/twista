@@ -1,0 +1,2 @@
+include twista/static/*
+include twista/templates/*

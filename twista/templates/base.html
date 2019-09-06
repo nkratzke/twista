@@ -1,0 +1,42 @@
+<!doctype html>
+<head>
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">    
+</head>
+<body>
+    <div id="head">
+        <h1>{{ title }}</h1>
+    </div>
+    <div class="block">
+        <div id="search">
+            <form action="/search" method="get">
+                <input type="text" name="search" placeholder="Search tweets ...">
+            </form>
+        </div>            
+    </div>
+    <div class="block">
+        <div class="tweets">
+            {% for tweet in tweets %}
+            <div class='tweet {{ tweet["tweet"]["type"] }}'>
+                <strong>[{{ tweet['tweet']['type'].upper() }}]</strong> from 
+                <a href="/user/{{ tweet['user']['id'] }}">@{{ tweet['user']['screen_name'] }}</a>
+                Date: {{ tweet['tweet']['created_at'] }}<br>
+                RTs: {{ tweet['tweet']['retweets'] }}, FAVs: {{ tweet['tweet']['favourites'] }}
+                <div class='text'>
+                    <a href="/tweet/{{ tweet['tweet']['id'] }}">{{ tweet['tweet']['text'] }}</a>
+                </div>
+                {% if tweet['refers_to']['text'] %}
+                <blockquote>
+                    <a href="/tweet/{{ tweet['refers_to']['id'] }}">
+                    {{ tweet['refers_to']['text'] }}
+                    </a> 
+                </blockquote>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div id="footer">
+        Copyright (C) 2019, Nane Kratzke
+    </div>
+</body>
