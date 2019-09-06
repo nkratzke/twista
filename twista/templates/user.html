@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="user">
+    <h2>
+        <a href="https://twitter.com/{{ user['screen_name'] }}"><img class="logo" src="{{ url_for('static', filename='twitter-logo.png') }}"></a>
+        @{{ user['screen_name'] }}
+    </h2>
+
+    <div class="meta">
+        <div class="description">
+            {{ user['description'] }}
+        </div>
+        Since: <span class="created">{{ user['created_at'] }}</span><br>
+        Location: <span class="location">{{ user['location'] }}</span><br>
+        Follower: <span class="follower">{{ user['friends'] }}</span><br>
+        Listed: <span class="listed">{{ user['listed'] }}</span><br>
+        Posts: <span class="posts">{{ user['statuses'] }}</span>
+    </div>
+
+    <div class="retweeters">
+        <h2>Retweeting network</h2>
+        {% for retweeter, n in retweeters %}
+            <a href="/user/{{ retweeter['id'] }}">@{{ retweeter['screen_name'] }}</a>
+            ({{ n }})
+        {% endfor %}
+    </div>
+    
+    <div class="tags">
+        <h2>Correlated tags</h2>
+        {% for tag, n in tags %}
+        <a href="/tag/{{tag}}">#{{ tag }}</a> ({{ n }})
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

@@ -7,14 +7,26 @@ body {
     color: darkgray;
 }
 
-blockquote {
-    margin: 0.5em 0em 0.5em 0em;
-    font-style: italic;
+.user h2 .logo {
+    width: 2em;
+}
+
+.user .meta {
+    border-left: 0.5em solid rgba(0, 0, 0, 0.25);
     padding: 1em;
-    padding-left: 1em;
-    border-left: 0.25em solid rgba(0, 0, 0, 0.5);
-    border-radius: 0.5em;
-    background: rgba(0, 0, 0, 0.05)
+}
+
+.user .description {
+    margin-bottom: 1em;
+    font-size: 1.05rem;
+}
+
+.retweets, .favs {
+    border-radius: 0.25em;
+    padding-left: 0.25em;
+    padding-right: 0.25em;
+    background-color: rgba(0, 0, 0, 0.75);
+    color:whitesmoke;
 }
 
 #head {
@@ -29,7 +41,7 @@ blockquote {
     width: 960px;
 }
 
-.tweets .tweet {
+.tweet {
     margin: 1rem;
     padding: 1rem;
     color: #333;
@@ -43,16 +55,28 @@ blockquote {
     text-decoration: none;
 }
 
-.tweets .quote {
+.quote {
     background: #b3ffcc;
 }
 
-.tweets .status {
+.status {
     background: #ccd9ff;
 }
 
-.tweets .reply {
+.reply {
     background: #ffffcc;
+}
+
+.retweet {
+    background: silver;
+}
+
+blockquote {
+    margin: 0px;
+    margin-top: 0.5em;
+    padding: 1em;
+    border-left: 0.5em solid rgba(0, 0, 0, 0.25);
+    background: rgba(0, 0, 0, 0.1);
 }
 
 #search input[type=text] {

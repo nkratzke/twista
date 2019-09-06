@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content">
+    <h2>Tweet</h2>
+    {{ tweet | render_tweet(of=user, ctx=ctx) | safe }}
+</div>
+
+<div class="users">
+    <h2>Correlated users</h2>
+    {% for usr, n in user_ctx %}
+    <a href="/user/{{ usr['id'] }}">@{{ usr['screen_name'] }}</a> ({{ n }})
+    {% endfor %}
+</div>
+
+<div class="context">
+    <h2>Context timeline</h2>
+    {% for ctx in full_ctx %}
+    {{ ctx['tweet'] | render_tweet(of=ctx['user']) | safe }}
+    {% endfor %}
+</div>
+{% endblock %}

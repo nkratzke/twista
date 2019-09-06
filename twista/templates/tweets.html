@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="tweets">
+    {% for tweet in tweets %}
+    <div class='tweet {{ tweet["type"] }}'>
+        <strong>[{{ tweet['type'].upper() }}]</strong> from 
+        <a class='user' id="{{ tweet['user'] }}">???</a>
+        Date: {{ tweet['created_at'] }}
+        <div class='text'>
+            <a href="/tweet/{{ tweet['id'] }}">{{ tweet['text'] }}</a>
+        </div>
+        Retweets: <span class="retweets">{{ tweet['retweets'] }}</span>
+        Likes: <span class="favs">{{ tweet['favourites'] }}</span>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    window.onload = function () {
+        document.querySelectorAll(".tweets a.user").forEach((element, _) => {
+            loadJson("/user/" + element.id + "/json", (user) => {
+                element.innerText = "@" + user['screen_name'];
+                element.href = "/user/" + element.id;
+            });
+        });
+    }
+</script>
+{% endblock %}

@@ -1,2 +1,2 @@
-VERSION = '0.3.0-c'
+VERSION = '0.3.1-a'
 name = "Twista"

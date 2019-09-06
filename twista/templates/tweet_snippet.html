@@ -1,0 +1,19 @@
+<div class="tweet {{ tweet['type'] }}">
+    <div class="meta">
+        <span class="type"><a href="/tweet/{{ tweet['id'] }}">[{{ tweet['type'] | upper }}]</a></span>
+        <span class="author">by <a href="/user/{{ user['id'] }}">@{{ user['screen_name'] }}</a></span>
+        <span class="datetime">at {{ tweet['created_at'] }}</span>
+    </div>
+    <div class="text">
+        {% if tweet['text'] %}
+        <a href="/tweet/{{ tweet['id'] }}">{{ tweet['text'] }}</a>
+        {% endif %}
+        {% for c in ctx %}
+        {{ c['tweet'] | render_tweet(of=c['user']) | safe }}
+        {% endfor %}
+    </div>
+    <div class="statistics">
+        RT: <span class="retweets">{{ tweet['retweets'] }}</span>
+        Likes: <span class="favs">{{ tweet['favourites'] }}</span>
+    </div>
+</div>
