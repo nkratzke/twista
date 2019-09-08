@@ -12,7 +12,9 @@
         <div class="description">
             {{ user['description'] }}
         </div>
+        {% if user['url'] %}
         <a class="web" href="{{ user['url'] }}">Link</a><br>
+        {% endif %}
         Since: <span class="created">{{ user['created_at'] }}</span><br>
         Location: <span class="location">{{ user['location'] }}</span><br>
         Follower: <span class="follower">{{ user['friends'] }}</span><br>
@@ -23,15 +25,14 @@
     <div class="retweeters">
         <h2>Retweeting network</h2>
         {% for retweeter, n in retweeters %}
-            <a href="/user/{{ retweeter['id'] }}">@{{ retweeter['screen_name'] }}</a>
-            ({{ n }})
+        {{ ("@" + retweeter['screen_name']) | mark(n=n, link="/user/" + retweeter['id']) | safe }}
         {% endfor %}
     </div>
     
     <div class="tags">
         <h2>Correlated tags</h2>
         {% for tag, n in tags %}
-        <a href="/tag/{{tag}}">#{{ tag }}</a> ({{ n }})
+        {{ ("#" + tag) | mark(n=n, link="/tag/" + tag) | safe }}
         {% endfor %}
     </div>
 

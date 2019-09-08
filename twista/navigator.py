@@ -14,16 +14,20 @@ graph = None
 def render_tweet(tweet, of={}, ctx=[]):
     return render_template('tweet_snippet.html', tweet=tweet, user=of, ctx=ctx)
 
+@app.template_filter()
+def mark(content, link="", n=0):
+    return f"<a href='{ link }'><span class='marker'>{ content }</span><span class='frequency'>{ n }</span></a>"
+
 @app.route('/')
 def hello():
     return redirect(url_for('search'))
 
 @app.route('/tag/<id>')
 def tweets_for_tag(id):
-    tweets = [tweet['t'] for tweet in graph.run("""
-        MATCH (tag:Tag{id: {id}}) <-[:HAS_TAG]- (t:Tweet)
+    tweets = [{ 'tweet': tweet['t'], 'user': tweet['u'] } for tweet in graph.run("""
+        MATCH (tag:Tag{id: {id}}) <-[:HAS_TAG]- (t:Tweet) <-[:POSTS]- (u:User)
         WHERE t.type <> 'retweet'
-        RETURN t 
+        RETURN t, u
         ORDER BY t.created_at DESCENDING
         LIMIT 100
         """, id=id)]
@@ -45,6 +49,12 @@ def tweet(id):
         ORDER BY ctx.created_at DESCENDING
         """, id=id)]
 
+    tags = graph.run("""
+        MATCH (:Tweet{id: {id}}) -[:REFERS_TO*]- (ctx:Tweet) -[:HAS_TAG]-> (tag:Tag)
+        RETURN collect(tag.id)
+        """, id=id).evaluate()
+    print(tags)
+
     usr_context = Counter([ctx['user'] for ctx in full_context]).most_common(100)
 
     return render_template('tweet.html', 
@@ -52,7 +62,8 @@ def tweet(id):
         user=usr, 
         ctx=context, 
         full_ctx=full_context,
-        user_ctx=usr_context
+        user_ctx=usr_context,
+        tags=Counter(tags).most_common(100)
     )
 
 @app.route('/user/<id>')
@@ -90,10 +101,11 @@ def search():
     result = graph.run("""
         CALL db.index.fulltext.queryNodes('tweets', { search }) YIELD node AS tweet, score
         WHERE tweet.type <> 'retweet' AND tweet.retweets IS NOT NULL AND tweet.created_at > datetime({ since })
-        RETURN tweet, score ORDER BY tweet.retweets DESCENDING, tweet.created_at DESCENDING, score DESCENDING
+        MATCH (tweet) <-[:POSTS]- (usr:User)
+        RETURN tweet, usr, score ORDER BY tweet.retweets DESCENDING, tweet.created_at DESCENDING, score DESCENDING
         LIMIT 100
     """, search=search_arg, since = since)
-    return render_template('tweets.html', tweets=[t['tweet'] for t in result])
+    return render_template('tweets.html', tweets=[{'tweet': t['tweet'], 'user': t['usr'] } for t in result])
 
 
 def as_json(data):

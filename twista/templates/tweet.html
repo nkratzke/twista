@@ -9,10 +9,17 @@
 <div class="users">
     <h2>Correlated users</h2>
     {% for usr, n in user_ctx %}
-    <a href="/user/{{ usr['id'] }}">@{{ usr['screen_name'] }}</a> ({{ n }})
+    {{ ( "@" + usr['screen_name']) | mark(n=n, link="/user/" + usr['id']) | safe }}
     {% endfor %}
 </div>
 
+<div class="tags">
+    <h2>Correlated tags</h2>
+    {% for tag, n in tags %}
+    {{ ( "#" + tag) | mark(n=n, link="/tag/" + tag) | safe }}
+    {% endfor %}
+</div>
+    
 <div class="context">
     <h2>Context timeline</h2>
     {% for ctx in full_ctx %}
