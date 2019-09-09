@@ -1,6 +1,12 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<div class="tags">
+    {% for tag, n in tags %}
+    {{ tag | mark(n=n, link="/tag/" + tag) | safe }}
+    {% endfor %}
+</div>
+
 <div class="tweets">
     {% for tweet in tweets %}
     <div class='tweet {{ tweet["tweet"]["type"] }}'>
@@ -15,4 +21,5 @@
     </div>
     {% endfor %}
 </div>
+
 {% endblock %}

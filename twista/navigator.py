@@ -22,8 +22,28 @@ def mark(content, link="", n=0):
 def hello():
     return redirect(url_for('search'))
 
+@app.route('/tags')
+def trending_tags():
+    since = datetime.utcnow() - timedelta(hours=72)
+    print(since)
+    result = [(r['tag'], r['n']) for r in graph.run("""
+        MATCH (tag:Tag) <-[:HAS_TAG]- (t:Tweet)
+        WHERE t.created_at > datetime({ since })
+        RETURN tag.id AS tag, count(t) AS n
+        ORDER BY n DESCENDING LIMIT 100
+        """, since = since)]
+
+    return render_template('tags.html', tags=result)
+
 @app.route('/tag/<id>')
 def tweets_for_tag(id):
+
+    volume = [(r['date'], r['n']) for r in graph.run("""
+        MATCH (:Tag{id: {id}}) <-[:HAS_TAG]- (t:Tweet)
+        WHERE t.created_at > datetime("2019-04-01")
+        RETURN date(t.created_at) AS date, count(t) as n ORDER BY date
+    """,id=id)]
+
     tweets = [{ 'tweet': tweet['t'], 'user': tweet['u'] } for tweet in graph.run("""
         MATCH (tag:Tag{id: {id}}) <-[:HAS_TAG]- (t:Tweet) <-[:POSTS]- (u:User)
         WHERE t.type <> 'retweet'
@@ -31,7 +51,11 @@ def tweets_for_tag(id):
         ORDER BY t.created_at DESCENDING
         LIMIT 100
         """, id=id)]
-    return render_template('tweets.html', tweets=tweets)
+        
+    return render_template('tag.html', tag=id, tweets=tweets, timeline={ 
+        'xs': [str(d) for d, n in volume],
+        'ys': [n for d, n in volume]
+    })
 
 @app.route('/tweet/<id>')
 def tweet(id):
@@ -43,6 +67,7 @@ def tweet(id):
         RETURN tweet, usr
         ORDER BY tweet.created_at DESCENDING
         """, id=id)]
+
     full_context = [{ 'tweet': ctx['ctx'], 'user': ctx['usr'] } for ctx in graph.run("""
         MATCH (:Tweet{id: {id}}) -[:REFERS_TO*]- (ctx:Tweet) <-[:POSTS]- (usr:User)
         RETURN ctx, usr
@@ -53,7 +78,15 @@ def tweet(id):
         MATCH (:Tweet{id: {id}}) -[:REFERS_TO*]- (ctx:Tweet) -[:HAS_TAG]-> (tag:Tag)
         RETURN collect(tag.id)
         """, id=id).evaluate()
-    print(tags)
+    
+    start = graph.run("MATCH(t:Tweet{id: {id}}) RETURN t.created_at", id=id).evaluate()
+    durations = [t['dt'] - start for t in graph.run("""
+        MATCH (:Tweet{id: {id}}) -[:REFERS_TO*]- (ctx:Tweet)
+        RETURN ctx.created_at AS dt ORDER BY dt
+        """, id=id)]
+    hours = Counter([(d.days * 24 * 3600 + d.seconds) // 3600 for d in durations])
+    xs = sorted(hours.keys())
+    ys = [hours[x] for x in xs]
 
     usr_context = Counter([ctx['user'] for ctx in full_context]).most_common(100)
 
@@ -63,8 +96,22 @@ def tweet(id):
         ctx=context, 
         full_ctx=full_context,
         user_ctx=usr_context,
-        tags=Counter(tags).most_common(100)
+        tags=Counter(tags).most_common(100),
+        timeline={ 'xs': xs, 'ys': ys }
     )
+
+@app.route("/users")
+def trending_users():
+    since = datetime.utcnow() - timedelta(hours=72)
+    print(since)
+    result = [(r['u'], r['n']) for r in graph.run("""
+        MATCH (u:User) <-[:MENTIONS]- (t:Tweet)
+        WHERE t.created_at > datetime({ since })
+        RETURN u, count(t) AS n
+        ORDER BY n DESCENDING LIMIT 100
+        """, since = since)]
+
+    return render_template('users.html', users=result)
 
 @app.route('/user/<id>')
 def user_as_html(id):
@@ -79,16 +126,55 @@ def user_as_html(id):
         RETURN rt
         """, id=id).data()]
 
+    volume = [(r['date'], r['n']) for r in graph.run("""
+        MATCH (:User{id: {id}}) -[:POSTS]-> (t:Tweet)
+        WHERE t.created_at > datetime("2019-04-01")
+        RETURN date(t.created_at) AS date, count(t) as n ORDER BY date
+        """, id=id)]
+
+    reactions = [(r['date'], r['n']) for r in graph.run("""
+        MATCH (:User{id: {id}}) -[:POSTS]-> (:Tweet) <-[:REFERS_TO*]- (r:Tweet)
+        WHERE r.created_at > datetime("2019-04-01")
+        RETURN date(r.created_at) as date, count(r) as n ORDER BY date
+        """, id=id)]
+
+    behaviour = [(r['type'], r['n']) for r in graph.run("""
+        MATCH (u:User{id: {id}}) -[:POSTS]-> (t:Tweet) 
+        RETURN t.type AS type, count(t) AS n
+        ORDER BY type
+        """, id=id)]
+
     return render_template('user.html', 
         user=result, 
         tags=Counter(tags).most_common(100),
-        retweeters=Counter(retweeters).most_common(100)
+        retweeters=Counter(retweeters).most_common(100),
+        actions = {
+            'xs': [str(d) for d, n in volume],
+            'ys': [n for d, n in volume]
+        },
+        reactions = {
+            'xs': [str(d) for d, n in reactions],
+            'ys': [n for d, n in reactions]
+        },
+        behaviour = {
+            'types': [t for t, n in behaviour],
+            'n': [n for t, n in behaviour]
+        }
     )
 
-@app.route('/user/<id>/json')
-def user_as_json(id):
-    result = graph.run("MATCH (u:User{id: {id}}) RETURN u", id=id).evaluate()
-    return as_json(Counter(result))
+@app.route('/tweets')
+def trending_tweets():
+    since = datetime.utcnow() - timedelta(hours=72)
+
+    result = [{ 'tweet': r['t'], 'user': r['u'] } for r in graph.run("""
+        MATCH (u:User) -[:POSTS]-> (t:Tweet) <-[:REFERS_TO*]- (r:Tweet)
+        WHERE t.created_at > datetime({ since })
+        RETURN u, t, count(r) AS n
+        ORDER BY n DESCENDING LIMIT 100
+        """, since = since)]
+
+    return render_template('tweets.html', tweets=result)
+
 
 @app.route('/search')
 def search():
@@ -101,8 +187,8 @@ def search():
     result = graph.run("""
         CALL db.index.fulltext.queryNodes('tweets', { search }) YIELD node AS tweet, score
         WHERE tweet.type <> 'retweet' AND tweet.retweets IS NOT NULL AND tweet.created_at > datetime({ since })
-        MATCH (tweet) <-[:POSTS]- (usr:User)
-        RETURN tweet, usr, score ORDER BY tweet.retweets DESCENDING, tweet.created_at DESCENDING, score DESCENDING
+        MATCH (r:Tweet) -[:REFERS_TO]- (tweet) <-[:POSTS]- (usr:User)
+        RETURN tweet, usr, score, count(r) AS n ORDER BY n DESCENDING, tweet.created_at DESCENDING, score DESCENDING
         LIMIT 100
     """, search=search_arg, since = since)
     return render_template('tweets.html', tweets=[{'tweet': t['tweet'], 'user': t['usr'] } for t in result])

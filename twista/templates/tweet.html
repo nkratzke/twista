@@ -6,6 +6,26 @@
     {{ tweet | render_tweet(of=user, ctx=ctx) | safe }}
 </div>
 
+<div class="timeline">
+    <div id="timeline"></div>
+    <script>
+        Plotly.newPlot('timeline', [{
+            x: {{ timeline['xs'] }},
+            y: {{ timeline['ys'] }},
+            type: 'scatter',
+            line: {shape: 'spline'}
+        }], {
+            title: 'User reactions',
+            xaxis: {
+                title: 'Hours before/after post of tweet'
+            },
+            yaxis: {
+                title: 'User reactions per hour'
+            }
+        });
+    </script>
+</div>
+
 <div class="users">
     <h2>Correlated users</h2>
     {% for usr, n in user_ctx %}

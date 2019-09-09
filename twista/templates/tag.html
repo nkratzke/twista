@@ -1,6 +1,26 @@
 {% extends 'base.html' %}
 
 {% block content %}
+
+<h2>#{{ tag }}</h2>
+
+<div class="timeline">
+    <div id="tagvolume"></div>
+    <script>
+        Plotly.newPlot('tagvolume', [{
+            x: {{ timeline['xs'] | safe }},
+            y: {{ timeline['ys'] }},
+            type: 'scatter',
+            line: {shape: 'spline'}
+        }], {
+            title: 'Tweets per day for tag #{{ tag }}',
+            yaxis: {
+                title: 'Tweets per day'
+            }
+        });
+    </script>
+</div>
+
 <div class="tweets">
     {% for tweet in tweets %}
     <div class='tweet {{ tweet["tweet"]["type"] }}'>
@@ -15,4 +35,5 @@
     </div>
     {% endfor %}
 </div>
+
 {% endblock %}

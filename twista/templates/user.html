@@ -22,6 +22,34 @@
         Posts: <span class="posts">{{ user['statuses'] }}</span>
     </div>
 
+    <div class="timeline">
+        <h2>Activity</h2>
+        <div id="uservolume"></div>
+        <div id="behaviour"></div>
+        <script>
+            Plotly.newPlot('uservolume', [{
+                x: {{ actions['xs'] | safe }},
+                y: {{ actions['ys'] }},
+                type: 'scatter',
+                line: {shape: 'spline'},
+                name: "Posts",
+            }, {
+                x: {{ reactions['xs'] | safe }},
+                y: {{ reactions['ys'] }},
+                type: 'scatter',
+                line: {shape: 'spline'},
+                name: "Reactions"
+            }]);
+        </script>
+        <script>
+            Plotly.newPlot("behaviour", [{
+                values: {{ behaviour['n'] }},
+                labels: {{ behaviour['types'] | safe }},
+                type: 'pie'
+            }]);
+        </script>
+    </div>
+
     <div class="retweeters">
         <h2>Retweeting network</h2>
         {% for retweeter, n in retweeters %}
