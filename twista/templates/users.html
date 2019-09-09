@@ -2,8 +2,24 @@
 
 {% block content %}
 <div class="users">
-    {% for u, n in users %}
-    {{ ("@" + u['screen_name']) | mark(n=n, link="/user/" + u['id']) | safe }}
-    {% endfor %}
+    <table>
+        <thead>
+            <th>Screenname</th><th>Description</th><th>Impact</th>
+        </thead>
+        <tbody>
+            {% for usr, qty in users %}
+            <tr>
+                <td><a href="/user/{{ usr['id'] }}">{{ "@" + usr['screen_name'] }}</a></td>
+                <td>{{ usr['description'] | safe }}</td>
+                <td>{{ qty }} </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
+
+<script>
+document.querySelector("#head #search form").setAttribute('action', '/users/search')
+document.querySelector("#head #search form input").setAttribute('placeholder', 'Search for @user')
+</script>
 {% endblock %}

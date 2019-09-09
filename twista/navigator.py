@@ -20,7 +20,7 @@ def mark(content, link="", n=0):
 
 @app.route('/')
 def hello():
-    return redirect(url_for('search'))
+    return redirect(url_for('tweets/search'))
 
 @app.route('/tags')
 def trending_tags():
@@ -113,6 +113,21 @@ def trending_users():
 
     return render_template('users.html', users=result)
 
+@app.route("/users/search")
+def users_search():
+    search_arg = request.args.get("search")
+
+    if not search_arg:
+        return render_template('users.html', users=[])
+
+    result = graph.run("""
+        CALL db.index.fulltext.queryNodes('users', { search }) YIELD node AS user, score
+        OPTIONAL MATCH (user:User) -[:POSTS]-> (:Tweet) <-[:REFERS_TO]- (r:Tweet)
+        RETURN user, count(r) AS qty, score ORDER BY qty DESCENDING, score DESCENDING
+        LIMIT 1000
+    """, search=search_arg)
+    return render_template('users.html', users=[ (t['user'], t['qty']) for t in result])
+
 @app.route('/user/<id>')
 def user_as_html(id):
     result = graph.run("MATCH (u:User{id: {id}}) RETURN u", id=id).evaluate()
@@ -176,12 +191,12 @@ def trending_tweets():
     return render_template('tweets.html', tweets=result)
 
 
-@app.route('/search')
+@app.route('/tweets/search')
 def search():
     search_arg = request.args.get("search")
 
     if not search_arg:
-        return render_template('base.html', tweets=[])
+        return render_template('tweets.html', tweets=[])
 
     since = (datetime.utcnow() - timedelta(days=7)).strftime("%Y-%m-%d")
     result = graph.run("""

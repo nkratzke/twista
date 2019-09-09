@@ -120,10 +120,26 @@ blockquote {
 	outline: none;
 }
 
+table thead th {
+    font-size: 1rem;
+    text-align: left;
+    background: #1da1f2;
+    color: white;
+}
+
+table td, table th {
+    font-size: 0.9rem;
+    font-weight: lighter;
+    padding: 0.25em;
+}
+
+table tr:nth-child(even) td {
+    background: #1da1f255;
+}
+
 #search input[type=text]::placeholder {
 	color: rgba(255, 255, 255, 0.25);
 }
-
 
 #footer {
     margin-top: 2em;
