@@ -2,38 +2,71 @@
 
 {% block content %}
 
-<h2>#{{ tag }}</h2>
-
-<div class="timeline">
-    <div id="tagvolume"></div>
-    <script>
-        Plotly.newPlot('tagvolume', [{
-            x: {{ timeline['xs'] | safe }},
-            y: {{ timeline['ys'] }},
-            type: 'scatter',
-            line: {shape: 'spline'}
-        }], {
-            title: 'Tweets per day for tag #{{ tag }}',
-            yaxis: {
-                title: 'Tweets per day'
-            }
-        });
-    </script>
-</div>
-
-<div class="tweets">
-    {% for tweet in tweets %}
-    <div class='tweet {{ tweet["tweet"]["type"] }}'>
-        <strong>[{{ tweet['tweet']['type'].upper() }}]</strong> from 
-        <a class='user' href="/user/{{ tweet['user']['id'] }}">@{{ tweet['user']['screen_name'] }}</a>
-        Date: {{ tweet['tweet']['created_at'] }}
-        <div class='text'>
-            <a href="/tweet/{{ tweet['tweet']['id'] }}">{{ tweet['tweet']['text'] }}</a>
+<div class="mdl-grid">
+    <div class="mdl-cell mdl-cell--12-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Tag #{{ tag }}</h2>
+            </div>
+            <div class="mdl-card__supporting-test">
+                <div id="tagvolume"></div>
+                <script>
+                    Plotly.newPlot('tagvolume', [{
+                        x: {{ timeline['xs'] | safe }},
+                        y: {{ timeline['ys'] }},
+                        type: 'scatter',
+                        line: {shape: 'spline'}
+                    }], {
+                        yaxis: {
+                            title: 'Tweets per day'
+                        }
+                    }, {
+                        responsive: true,
+                        displayModeBar: false
+                    });
+                </script>
+            </div>
         </div>
-        Retweets: <span class="retweets">{{ tweet['tweet']['retweets'] }}</span>
-        Likes: <span class="favs">{{ tweet['tweet']['favourites'] }}</span>
     </div>
-    {% endfor %}
+    <div class="mdl-cell mdl-cell--8-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Timeline</h2>
+            </div>
+            <div class="mdl-card__supporting-text">
+                {{ tweets | tweetlist | safe }}
+            </div>
+        </div>
+    </div>
+    <div class="mdl-cell mdl-cell--4-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Observed tags</h2>
+            </div>
+            <div class="mdl-card__supporting-text">
+                {% for tag, n in tags %}
+                <a href="/tag/{{ tag }}"><span class="mdl-chip mdl-chip--contact">
+                    <span class="mdl-chip__contact mdl-color--indigo mdl-color-text--white">{{ n }}</span>
+                    <span class="mdl-chip__text">#{{ tag }}</span>
+                </span></a>
+            {% endfor %}
+            </div>
+        </div>
+
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Most mentioned users</h2>
+            </div>
+            <div class="mdl-card__supporting-text">
+                {% for usr, n in mentions %}
+                <a href="/user/{{ usr['id'] }}"><span class="mdl-chip mdl-chip--contact">
+                    <span class="mdl-chip__contact mdl-color--indigo mdl-color-text--white">{{ n }}</span>
+                    <span class="mdl-chip__text">@{{ usr['screen_name'] }}</span>
+                </span></a>
+            {% endfor %}
+            </div>
+        </div>
+    </div>
 </div>
 
 {% endblock %}

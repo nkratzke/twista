@@ -1,0 +1,20 @@
+<div class="mdl-card mdl-shadow--2dp">
+    {% if title %}
+    <div class="mdl-card__title">
+        <h2 class="mdl-card__title-text">{{ title }}</h2>
+    </div>
+    {% endif %}
+    {% if media %}
+    <div class="mdl-card__media">
+        {{ media | safe }}
+    </div>
+    {% endif %}
+    <div class="mdl-card__supporting-text">
+        {{ text | safe }}
+    </div>
+    {% if actions %}
+    <div class="mdl-card__actions">
+        {{ actions | safe }}
+    </div>
+    {% endif %}
+</div>

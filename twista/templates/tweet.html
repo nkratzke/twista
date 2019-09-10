@@ -1,49 +1,85 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="content">
-    <h2>Tweet</h2>
-    {{ tweet | render_tweet(of=user, ctx=ctx) | safe }}
-</div>
 
-<div class="timeline">
-    <div id="timeline"></div>
-    <script>
-        Plotly.newPlot('timeline', [{
-            x: {{ timeline['xs'] }},
-            y: {{ timeline['ys'] }},
-            type: 'scatter',
-            line: {shape: 'spline'}
-        }], {
-            title: 'User reactions',
-            xaxis: {
-                title: 'Hours before/after post of tweet'
-            },
-            yaxis: {
-                title: 'User reactions per hour'
+<div class="mdl-grid">
+    <div class="mdl-cell mdl-cell--8-col">
+        {{ tweet | render_tweet(of=user, ctx=ctx) | safe }}
+    </div>
+    <div class="mdl-cell mdl-cell--4-col">
+        {{  "" | card(title='Observed interactions', media='<div id="timeline"></div>') | safe  }}
+        <script>
+            var data = [{
+                x: {{ timeline['xs'] }},
+                y: {{ timeline['ys'] }},
+                type: 'scatter',
+                line: {shape: 'spline'}
+            }];
+            var layout = {
+                height: 200,
+                margin: {
+                    l: 100,
+                    r: 50,
+                    b: 10,
+                    t: 10,
+                    pad: 5
+                },
+                yaxis: {
+                    title: 'User reactions per hour',
+                    automargin: true,
+                },
+                xaxis: {
+                    automargin: true,
+                }
+            };
+            config = {
+                responsive: true,
+                displayModeBar: false
             }
-        });
-    </script>
+            Plotly.newPlot('timeline', data, layout, config);
+        </script>
+    </div>    
 </div>
 
-<div class="users">
-    <h2>Correlated users</h2>
-    {% for usr, n in user_ctx %}
-    {{ ( "@" + usr['screen_name']) | mark(n=n, link="/user/" + usr['id']) | safe }}
-    {% endfor %}
-</div>
+<div class="mdl-grid">
+    <div class="mdl-cell mdl-cell--8-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Timeline</h2>
+            </div>
+            <div class="mdl-card__supporting-text">
+                {{ full_ctx | tweetlist | safe }}   
+            </div>          
+        </div>
+    </div>
+    <div class="mdl-cell mdl-cell--4-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Observed users</h2>
+            </div>
 
-<div class="tags">
-    <h2>Correlated tags</h2>
-    {% for tag, n in tags %}
-    {{ ( "#" + tag) | mark(n=n, link="/tag/" + tag) | safe }}
-    {% endfor %}
-</div>
-    
-<div class="context">
-    <h2>Context timeline</h2>
-    {% for ctx in full_ctx %}
-    {{ ctx['tweet'] | render_tweet(of=ctx['user']) | safe }}
-    {% endfor %}
+            <div class="mdl-card__supporting-text">
+            {% for usr, n in user_ctx %}
+            <a href="/user/{{ usr['id'] }}"><span class="mdl-chip mdl-chip--contact">
+                    <span class="mdl-chip__contact mdl-color--indigo mdl-color-text--white">{{ n }}</span>
+                    <span class="mdl-chip__text">@{{ usr['screen_name'] }}</span>
+                </span></a>
+            {% endfor %}
+            </div>
+        </div>
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Observed tags</h2>
+            </div>
+            <div class="mdl-card__supporting-text">
+            {% for tag, n in tags %}
+            <a href="/tag/{{ tag }}"><span class="mdl-chip mdl-chip--contact">
+                    <span class="mdl-chip__contact mdl-color--indigo mdl-color-text--white">{{ n }}</span>
+                    <span class="mdl-chip__text">#{{ tag }}</span>
+                </span></a>
+            {% endfor %}
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

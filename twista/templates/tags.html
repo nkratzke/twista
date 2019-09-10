@@ -1,25 +1,20 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="tags">
-    {% for tag, n in tags %}
-    {{ tag | mark(n=n, link="/tag/" + tag) | safe }}
-    {% endfor %}
-</div>
 
-<div class="tweets">
-    {% for tweet in tweets %}
-    <div class='tweet {{ tweet["tweet"]["type"] }}'>
-        <strong>[{{ tweet['tweet']['type'].upper() }}]</strong> from 
-        <a class='user' href="/user/{{ tweet['user']['id'] }}">@{{ tweet['user']['screen_name'] }}</a>
-        Date: {{ tweet['tweet']['created_at'] }}
-        <div class='text'>
-            <a href="/tweet/{{ tweet['tweet']['id'] }}">{{ tweet['tweet']['text'] }}</a>
+<div class="mdl-grid">
+    <div class="mdl-cell mdl-cell--12-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Most frequent tags of last 72 hours</h2>
+            </div>
+            <div class="mdl-card__supporting-text">
+                {% for tag, n in tags %}
+                <a href="/tag/{{ tag }}">{{ ("#" + tag) | chip(data=n) | safe }}</a>
+                {% endfor %}
+            </div>
         </div>
-        Retweets: <span class="retweets">{{ tweet['tweet']['retweets'] }}</span>
-        Likes: <span class="favs">{{ tweet['tweet']['favourites'] }}</span>
     </div>
-    {% endfor %}
 </div>
 
 {% endblock %}

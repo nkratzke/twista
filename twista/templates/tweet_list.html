@@ -1,0 +1,21 @@
+<table>
+    <tbody>
+        {% for t in tweets %}
+        {% if t['tweet']['type'] != 'retweet' %}
+        <tr>
+            <td class="{{ t['tweet']['type'] }}">
+                <strong>
+                    <a href="/tweet/{{ t['tweet']['id'] }}">{{ t['tweet']['created_at'] | datetime }}</a>
+                    {{ t['tweet']['type'] }}
+                    by <a href="/user/{{ t['user']['id'] }}">{{ t['user']['screen_name'] | chip | safe }}</a>
+                    RT: <span class="retweets">{{ t['tweet']['retweets'] }}</span>,
+                    Likes: <span class="favs">{{ t['tweet']['favourites'] }}</span>
+                </strong>
+                <hr>
+                {{ t['tweet']['text'] | safe }}
+            </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </tbody>
+</table>    

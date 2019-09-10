@@ -1,13 +1,16 @@
 from flask import Flask, escape, request, Response, render_template, redirect, url_for
 from py2neo import Graph
 from collections import Counter
-from datetime import datetime, timedelta
+from datetime import datetime as dt
+from datetime import timedelta
 import json
 import os
+from dateutil import parser
 
 templates = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'templates')
 statics = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static')
 app = Flask("Twista navigator", template_folder=templates, static_folder=statics)
+app.jinja_options['extensions'].append('jinja2.ext.do')
 graph = None
 
 @app.template_filter()
@@ -15,16 +18,39 @@ def render_tweet(tweet, of={}, ctx=[]):
     return render_template('tweet_snippet.html', tweet=tweet, user=of, ctx=ctx)
 
 @app.template_filter()
+def tweetlist(tweets):
+    return render_template('tweet_list.html', tweets=tweets)
+
+@app.template_filter()
 def mark(content, link="", n=0):
     return f"<a href='{ link }'><span class='marker'>{ content }</span><span class='frequency'>{ n }</span></a>"
 
+@app.template_filter()
+def card(content, text="", title="", media="", actions=""):
+    return render_template('card_snippet.html', title=title, text=content, media=media, actions=actions)
+
+@app.template_filter()
+def chip(content, data=None):
+    if data:
+        return "".join([
+            f'<span class="mdl-chip mdl-chip--contact">',
+            f'<span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">{ data }</span>',
+            f'<span class="mdl-chip__text">{ content }</span>',
+            f'</span>'
+        ])
+    return f'<span class="mdl-chip"><span class="mdl-chip__text">{ content }</span></span>'
+
+@app.template_filter()
+def datetime(dt):
+    return parser.parse(str(dt)).strftime("%Y-%m-%d %H:%M:%S")
+
 @app.route('/')
 def hello():
-    return redirect(url_for('tweets/search'))
+    return redirect(url_for('/tweets'))
 
 @app.route('/tags')
 def trending_tags():
-    since = datetime.utcnow() - timedelta(hours=72)
+    since = dt.utcnow() - timedelta(hours=72)
     print(since)
     result = [(r['tag'], r['n']) for r in graph.run("""
         MATCH (tag:Tag) <-[:HAS_TAG]- (t:Tweet)
@@ -51,8 +77,24 @@ def tweets_for_tag(id):
         ORDER BY t.created_at DESCENDING
         LIMIT 100
         """, id=id)]
-        
-    return render_template('tag.html', tag=id, tweets=tweets, timeline={ 
+
+    tags = Counter(graph.run("""
+        MATCH (tag:Tag{id: {id}}) <-[:HAS_TAG]- (t:Tweet) -[:HAS_TAG]-> (other:Tag)
+        WHERE tag <> other
+        RETURN collect(other.id)
+        """, id=id).evaluate())
+
+    users = Counter(graph.run("""
+        MATCH (tag:Tag{id: {id}}) <-[:HAS_TAG]- (t:Tweet) -[:MENTIONS]-> (user:User)
+        RETURN collect(user)
+        """, id=id).evaluate())
+    
+    return render_template('tag.html', 
+        tag=id, 
+        tweets=tweets, 
+        tags=tags.most_common(100),
+        mentions=users.most_common(100),
+        timeline={ 
         'xs': [str(d) for d, n in volume],
         'ys': [n for d, n in volume]
     })
@@ -102,7 +144,7 @@ def tweet(id):
 
 @app.route("/users")
 def trending_users():
-    since = datetime.utcnow() - timedelta(hours=72)
+    since = dt.utcnow() - timedelta(hours=72)
     print(since)
     result = [(r['u'], r['n']) for r in graph.run("""
         MATCH (u:User) <-[:MENTIONS]- (t:Tweet)
@@ -179,7 +221,7 @@ def user_as_html(id):
 
 @app.route('/tweets')
 def trending_tweets():
-    since = datetime.utcnow() - timedelta(hours=72)
+    since = dt.utcnow() - timedelta(hours=72)
 
     result = [{ 'tweet': r['t'], 'user': r['u'] } for r in graph.run("""
         MATCH (u:User) -[:POSTS]-> (t:Tweet) <-[:REFERS_TO*]- (r:Tweet)
