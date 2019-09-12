@@ -6,6 +6,36 @@
     <div class="mdl-cell mdl-cell--12-col">
         <div class="mdl-card mdl-shadow--2dp">
             <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Tag volume of most frequent tags</h2>
+            </div>
+            <div class="mdl-card__supporting-text">
+                <div id="tagvolume"></div>
+                <script>
+                    Plotly.newPlot('tagvolume', [
+                        {% for tg, data in timelines.items() %}
+                        {
+                            x: {{ data['xs'] | safe }},
+                            y: {{ data['ys'] }},
+                            type: 'scatter',
+                            name: '{{ tg }}',
+                            line: {shape: 'spline'}
+                        },
+                        {% endfor %}
+                    ], {
+                        yaxis: {
+                            title: 'Tweets per day'
+                        }
+                    }, {
+                        responsive: true,
+                        displayModeBar: false
+                    });
+                </script>
+            </div>
+        </div>
+    </div>
+    <div class="mdl-cell mdl-cell--12-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
                 <h2 class="mdl-card__title-text">Most frequent tags of last 72 hours</h2>
             </div>
             <div class="mdl-card__supporting-text">

@@ -46,20 +46,29 @@ def datetime(dt):
 
 @app.route('/')
 def hello():
-    return redirect(url_for('/tweets'))
+    return redirect(url_for('/tweets/'))
 
-@app.route('/tags')
+@app.route('/tags/')
 def trending_tags():
-    since = dt.utcnow() - timedelta(hours=72)
-    print(since)
     result = [(r['tag'], r['n']) for r in graph.run("""
         MATCH (tag:Tag) <-[:HAS_TAG]- (t:Tweet)
-        WHERE t.created_at > datetime({ since })
         RETURN tag.id AS tag, count(t) AS n
         ORDER BY n DESCENDING LIMIT 100
-        """, since = since)]
+        """)]
 
-    return render_template('tags.html', tags=result)
+    tags = [t for t, n in result[0:10]]
+    timelines = graph.run("""
+        UNWIND {tags} AS tg
+        MATCH (t:Tweet) -[:HAS_TAG]-> (:Tag{id: tg})
+        RETURN tg, date(t.created_at) as date, count(t) as n
+        ORDER BY date
+        """, tags=tags).data()
+    data = { t: { 
+            'xs': [str(e['date']) for e in timelines if e['tg'] == t],
+            'ys': [e['n'] for e in timelines if e['tg'] == t]
+        } for t in tags }
+
+    return render_template('tags.html', tags=result, timelines=data)
 
 @app.route('/tag/<id>')
 def tweets_for_tag(id):
@@ -68,7 +77,7 @@ def tweets_for_tag(id):
         MATCH (:Tag{id: {id}}) <-[:HAS_TAG]- (t:Tweet)
         WHERE t.created_at > datetime("2019-04-01")
         RETURN date(t.created_at) AS date, count(t) as n ORDER BY date
-    """,id=id)]
+        """,id=id)]
 
     tweets = [{ 'tweet': tweet['t'], 'user': tweet['u'] } for tweet in graph.run("""
         MATCH (tag:Tag{id: {id}}) <-[:HAS_TAG]- (t:Tweet) <-[:POSTS]- (u:User)
@@ -219,7 +228,7 @@ def user_as_html(id):
         }
     )
 
-@app.route('/tweets')
+@app.route('/tweets/')
 def trending_tweets():
     since = dt.utcnow() - timedelta(hours=72)
 
@@ -249,10 +258,6 @@ def search():
         LIMIT 100
     """, search=search_arg, since = since)
     return render_template('tweets.html', tweets=[{'tweet': t['tweet'], 'user': t['usr'] } for t in result])
-
-
-def as_json(data):
-    return Response(json.dumps(data, indent=2, default=str), mimetype='application/json')
 
 def start(settings):
     global graph

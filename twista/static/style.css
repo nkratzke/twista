@@ -117,3 +117,7 @@ table thead th {
 table tr, table td {
     padding: 0.75em;
 }
+
+input[type="date"] {
+    width: 150px;
+}
