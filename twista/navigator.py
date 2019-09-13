@@ -46,23 +46,29 @@ def datetime(dt):
 
 @app.route('/')
 def hello():
-    return redirect(url_for('/tweets/'))
+    return redirect(url_for('search'))
 
-@app.route('/tags/')
+@app.route('/tags')
 def trending_tags():
+    print(request.args)
+    begin = request.args.get("begin", default="1970-01-01")
+    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+
     result = [(r['tag'], r['n']) for r in graph.run("""
         MATCH (tag:Tag) <-[:HAS_TAG]- (t:Tweet)
+        WHERE t.created_at >= datetime({begin}) AND t.created_at <= datetime({end})
         RETURN tag.id AS tag, count(t) AS n
         ORDER BY n DESCENDING LIMIT 100
-        """)]
+        """, begin=begin, end=end)]
 
     tags = [t for t, n in result[0:10]]
     timelines = graph.run("""
         UNWIND {tags} AS tg
         MATCH (t:Tweet) -[:HAS_TAG]-> (:Tag{id: tg})
+        WHERE t.created_at >= datetime({begin}) AND t.created_at <= datetime({end})
         RETURN tg, date(t.created_at) as date, count(t) as n
         ORDER BY date
-        """, tags=tags).data()
+        """, tags=tags, begin=begin, end=end).data()
     data = { t: { 
             'xs': [str(e['date']) for e in timelines if e['tg'] == t],
             'ys': [e['n'] for e in timelines if e['tg'] == t]
@@ -73,30 +79,34 @@ def trending_tags():
 @app.route('/tag/<id>')
 def tweets_for_tag(id):
 
+    begin = request.args.get("begin", default="1970-01-01")
+    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+
     volume = [(r['date'], r['n']) for r in graph.run("""
         MATCH (:Tag{id: {id}}) <-[:HAS_TAG]- (t:Tweet)
-        WHERE t.created_at > datetime("2019-04-01")
+        WHERE t.created_at >= datetime({ begin }) AND t.created_at <= datetime({ end })
         RETURN date(t.created_at) AS date, count(t) as n ORDER BY date
-        """,id=id)]
+        """,id=id, begin=begin, end=end)]
 
     tweets = [{ 'tweet': tweet['t'], 'user': tweet['u'] } for tweet in graph.run("""
         MATCH (tag:Tag{id: {id}}) <-[:HAS_TAG]- (t:Tweet) <-[:POSTS]- (u:User)
-        WHERE t.type <> 'retweet'
+        WHERE t.type <> 'retweet' AND t.created_at >= datetime({ begin }) AND t.created_at <= datetime({ end })
         RETURN t, u
         ORDER BY t.created_at DESCENDING
         LIMIT 100
-        """, id=id)]
+        """, id=id, begin=begin, end=end)]
 
     tags = Counter(graph.run("""
         MATCH (tag:Tag{id: {id}}) <-[:HAS_TAG]- (t:Tweet) -[:HAS_TAG]-> (other:Tag)
-        WHERE tag <> other
+        WHERE tag <> other AND t.created_at >= datetime({ begin }) AND t.created_at <= datetime({ end })
         RETURN collect(other.id)
-        """, id=id).evaluate())
+        """, id=id, begin=begin, end=end).evaluate())
 
     users = Counter(graph.run("""
         MATCH (tag:Tag{id: {id}}) <-[:HAS_TAG]- (t:Tweet) -[:MENTIONS]-> (user:User)
+        WHERE t.created_at >= datetime({ begin }) AND t.created_at <= datetime({ end })
         RETURN collect(user)
-        """, id=id).evaluate())
+        """, id=id, begin=begin, end=end).evaluate())
     
     return render_template('tag.html', 
         tag=id, 
@@ -104,9 +114,9 @@ def tweets_for_tag(id):
         tags=tags.most_common(100),
         mentions=users.most_common(100),
         timeline={ 
-        'xs': [str(d) for d, n in volume],
-        'ys': [n for d, n in volume]
-    })
+            'xs': [str(d) for d, n in volume],
+            'ys': [n for d, n in volume]
+        })
 
 @app.route('/tweet/<id>')
 def tweet(id):
@@ -153,30 +163,15 @@ def tweet(id):
 
 @app.route("/users")
 def trending_users():
-    since = dt.utcnow() - timedelta(hours=72)
-    print(since)
-    result = [(r['u'], r['n']) for r in graph.run("""
-        MATCH (u:User) <-[:MENTIONS]- (t:Tweet)
-        WHERE t.created_at > datetime({ since })
-        RETURN u, count(t) AS n
-        ORDER BY n DESCENDING LIMIT 100
-        """, since = since)]
-
-    return render_template('users.html', users=result)
-
-@app.route("/users/search")
-def users_search():
-    search_arg = request.args.get("search")
-
-    if not search_arg:
-        return render_template('users.html', users=[])
+    search = request.args.get("searchterm")
 
     result = graph.run("""
         CALL db.index.fulltext.queryNodes('users', { search }) YIELD node AS user, score
         OPTIONAL MATCH (user:User) -[:POSTS]-> (:Tweet) <-[:REFERS_TO]- (r:Tweet)
         RETURN user, count(r) AS qty, score ORDER BY qty DESCENDING, score DESCENDING
         LIMIT 1000
-    """, search=search_arg)
+        """, search=search)
+
     return render_template('users.html', users=[ (t['user'], t['qty']) for t in result])
 
 @app.route('/user/<id>')
@@ -228,36 +223,59 @@ def user_as_html(id):
         }
     )
 
-@app.route('/tweets/')
+@app.route('/tweets')
 def trending_tweets():
-    since = dt.utcnow() - timedelta(hours=72)
 
-    result = [{ 'tweet': r['t'], 'user': r['u'] } for r in graph.run("""
-        MATCH (u:User) -[:POSTS]-> (t:Tweet) <-[:REFERS_TO*]- (r:Tweet)
-        WHERE t.created_at > datetime({ since })
-        RETURN u, t, count(r) AS n
-        ORDER BY n DESCENDING LIMIT 100
-        """, since = since)]
+    searchterm = request.args.get("searchterm", default="n")
+    begin = request.args.get("begin", default="1970-01-01")
+    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
 
-    return render_template('tweets.html', tweets=result)
-
-
-@app.route('/tweets/search')
-def search():
-    search_arg = request.args.get("search")
-
-    if not search_arg:
-        return render_template('tweets.html', tweets=[])
-
-    since = (datetime.utcnow() - timedelta(days=7)).strftime("%Y-%m-%d")
     result = graph.run("""
-        CALL db.index.fulltext.queryNodes('tweets', { search }) YIELD node AS tweet, score
-        WHERE tweet.type <> 'retweet' AND tweet.retweets IS NOT NULL AND tweet.created_at > datetime({ since })
+        CALL db.index.fulltext.queryNodes('tweets', { searchterm }) YIELD node AS tweet, score
+        WHERE tweet.type <> 'retweet' AND tweet.created_at >= datetime({ begin }) AND tweet.created_at <= datetime({ end })
         MATCH (r:Tweet) -[:REFERS_TO]- (tweet) <-[:POSTS]- (usr:User)
         RETURN tweet, usr, score, count(r) AS n ORDER BY n DESCENDING, tweet.created_at DESCENDING, score DESCENDING
         LIMIT 100
-    """, search=search_arg, since = since)
-    return render_template('tweets.html', tweets=[{'tweet': t['tweet'], 'user': t['usr'] } for t in result])
+        """, searchterm=searchterm, begin=begin, end=end)
+
+    timeline = [(t['date'], t['n']) for t in graph.run("""
+        CALL db.index.fulltext.queryNodes('tweets', { searchterm }) YIELD node AS tweet, score
+        WHERE tweet.created_at >= datetime({ begin }) AND tweet.created_at <= datetime({ end })
+        RETURN date(tweet.created_at) AS date, count(tweet) AS n ORDER BY date
+        """, searchterm=searchterm, begin=begin, end=end)]
+
+    portion = [(t['type'], t['n']) for t in graph.run("""
+        CALL db.index.fulltext.queryNodes('tweets', { searchterm }) YIELD node AS tweet, score
+        WHERE tweet.created_at >= datetime({ begin }) AND tweet.created_at <= datetime({ end })
+        RETURN tweet.type AS type, count(tweet) AS n ORDER BY type
+        """, searchterm=searchterm, begin=begin, end=end)]
+
+    rts = graph.run("""
+        CALL db.index.fulltext.queryNodes('tweets', { searchterm }) YIELD node AS tweet, score
+        MATCH (tweet:Tweet) <-[:REFERS_TO]- (rt:Tweet{type: 'retweet'})
+        WHERE rt.created_at >= datetime({ begin }) AND rt.created_at <= datetime({ end })
+        RETURN count(rt) AS n
+        """, searchterm=searchterm, begin=begin, end=end).evaluate()
+
+    return render_template('tweets.html', 
+        tweets=[{'tweet': t['tweet'], 'user': t['usr'] } for t in result],
+        plot={
+            'xs': [str(d) for d, n in timeline],
+            'ys': [n for d, n in timeline]
+        },
+        pie={
+            'labels': ['retweet'] + [str(d) for d, n in portion],
+            'values': [rts] + [n for d, n in portion]
+        }
+    )
+
+@app.route('/search')
+def search():
+    entity = request.args.get("entity")
+    if entity == "tweet":
+        return redirect(url_for('trending_tweets'))
+    else:
+        return redirect(url_for('trending_users'))
 
 def start(settings):
     global graph

@@ -1,6 +1,63 @@
 {% extends 'base.html' %}
 
 {% block content %}
+
+<div class="mdl-grid">
+    <div class="mdl-cell mdl-cell--8-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Volume</h2>
+            </div>
+            <div id="tweetvolume"></div>
+            <script>
+                Plotly.newPlot('tweetvolume', [{
+                    x: {{ plot['xs'] | safe }},
+                    y: {{ plot['ys'] }},
+                    type: 'scatter',
+                    line: {shape: 'spline'}
+                }], {
+                    yaxis: {
+                        title: 'Tweets per day'
+                    }
+                }, {
+                    responsive: true,
+                    displayModeBar: false
+                });
+            </script>
+        </div>
+    </div>
+    <div class="mdl-cell mdl-cell--4-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Type of tweets</h2>
+            </div>
+            <div id="typepie"></div>
+            <script>
+                Plotly.newPlot('typepie', [{
+                    values: {{ pie['values'] }},
+                    labels: {{ pie['labels'] | safe }},
+                    type: 'pie'
+                }], {}, {
+                    responsive: true,
+                    displayModeBar: false
+                });
+            </script>
+        </div>
+    </div>
+
+    <div class="mdl-cell mdl-cell--12-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Tweets</h2>
+            </div>
+            <div class="mdl-card__supporting-text">
+                {{ tweets | tweetlist | safe }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--
 <div class="tweets">
     {% for tweet in tweets %}
     <div class='tweet {{ tweet["tweet"]["type"] }}'>
@@ -15,4 +72,5 @@
     </div>
     {% endfor %}
 </div>
+-->
 {% endblock %}

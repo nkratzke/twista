@@ -45,7 +45,7 @@
             </div>
             <div class="mdl-card__supporting-text">
                 {% for tag, n in tags %}
-                <a href="/tag/{{ tag }}"><span class="mdl-chip mdl-chip--contact">
+                <a href="/tag/{{ tag }}" class="filtered"><span class="mdl-chip mdl-chip--contact">
                     <span class="mdl-chip__contact mdl-color--indigo mdl-color-text--white">{{ n }}</span>
                     <span class="mdl-chip__text">#{{ tag }}</span>
                 </span></a>

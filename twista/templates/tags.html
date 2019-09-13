@@ -3,7 +3,7 @@
 {% block content %}
 
 <div class="mdl-grid">
-    <div class="mdl-cell mdl-cell--12-col">
+    <div class="mdl-cell mdl-cell--8-col">
         <div class="mdl-card mdl-shadow--2dp">
             <div class="mdl-card__title">
                 <h2 class="mdl-card__title-text">Tag volume of most frequent tags</h2>
@@ -36,11 +36,11 @@
     <div class="mdl-cell mdl-cell--12-col">
         <div class="mdl-card mdl-shadow--2dp">
             <div class="mdl-card__title">
-                <h2 class="mdl-card__title-text">Most frequent tags of last 72 hours</h2>
+                <h2 class="mdl-card__title-text">Most frequent tags</h2>
             </div>
             <div class="mdl-card__supporting-text">
                 {% for tag, n in tags %}
-                <a href="/tag/{{ tag }}">{{ ("#" + tag) | chip(data=n) | safe }}</a>
+                <a href="/tag/{{ tag }}" class="filtered">{{ ("#" + tag) | chip(data=n) | safe }}</a>
                 {% endfor %}
             </div>
         </div>

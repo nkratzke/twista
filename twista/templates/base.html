@@ -8,9 +8,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
-    <!-- unclear whether necessary
+ 
     <script src="{{ url_for('static', filename='utils.js') }}"></script>
-    -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 </head>
@@ -22,9 +21,9 @@
                 <div class="mdl-layout-spacer"></div>
                 <div class="mdl-layout-spacer"></div>
                 <nav class="mdl-navigation mdl-layout--large-screen-only">
-                    <a class="mdl-navigation__link" href="/tweets">Tweets</a>
-                    <a class="mdl-navigation__link" href="/tags">Tags</a>
-                    <a class="mdl-navigation__link" href="/users">Users</a>
+                    <a class="mdl-navigation__link filtered" href="/tweets">Tweets</a>
+                    <a class="mdl-navigation__link filtered" href="/tags">Tags</a>
+                    <a class="mdl-navigation__link filtered" href="/users">Users</a>
                 </nav>
             </div>
         </header>
@@ -32,38 +31,42 @@
         <div class="mdl-layout__drawer">
             <span class="mdl-layout-title">Twista</span>
             <nav class="mdl-navigation">
-                <a class="mdl-navigation__link" href="/tweets">Tweets</a>
-                <a class="mdl-navigation__link" href="/tags">Tags</a>
-                <a class="mdl-navigation__link" href="/users">Users</a>
+                <a class="mdl-navigation__link filtered" href="/tweets">Tweets</a>
+                <a class="mdl-navigation__link filtered" href="/tags">Tags</a>
+                <a class="mdl-navigation__link filtered" href="/users">Users</a>
+
             </nav>
         </div>
 
         <main class="mdl-layout__content">
             <div class="page-content">
                 <div class="mdl-grid">
-                    <div class="mdl-cell mdl-cell--8-col">
-                        <form action="#">
+                    <div class="mdl-cell mdl-cell--12-col">
+                        <form id="filter">
                             <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label has-placeholder">
-                                <input class="mdl-textfield__input" type="text" id="search">
-                                <label class="mdl-textfield__label" for="search">Search for ...</label>
+                                <input class="mdl-textfield__input" type="text" name="searchterm" id="searchterm">
+                                <label class="mdl-textfield__label" for="searchterm">Search for ...</label>
                             </div>
+                            <button class="mdl-button mdl-js-button mdl-button--colored">
+                                <i class="material-icons">search</i>Search
+                            </button>
+                            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label has-placeholder">
+                                <input class="mdl-textfield__input" type="date" name="begin" id="begin">
+                                <label class="mdl-textfield__label" for="begin">Begin</label>
+                            </div>
+                            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label has-placeholder">
+                                <input class="mdl-textfield__input" type="date" name="end" id="end">
+                                <label class="mdl-textfield__label" for="end">End</label>
+                            </div>
+                            <br>
                             <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="tweets">
-                                    <input type="radio" id="tweets" class="mdl-radio__button" name="options" value="1" checked>
-                                    <span class="mdl-radio__label">Tweets</span>
+                                <input type="radio" id="tweets" class="mdl-radio__button" name="entity" value="tweet">
+                                <span class="mdl-radio__label">Tweets</span>
                             </label>
                             <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="users">
-                                    <input type="radio" id="users" class="mdl-radio__button" name="options" value="2">
-                                    <span class="mdl-radio__label">Users</span>
+                                <input type="radio" id="users" class="mdl-radio__button" name="entity" value="user">
+                                <span class="mdl-radio__label">Users</span>
                             </label>
-                            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label has-placeholder">
-                                <input class="mdl-textfield__input" type="date" id="start">
-                                <label class="mdl-textfield__label" for="start">Start</label>
-                            </div>
-                            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label has-placeholder">
-                                <input class="mdl-textfield__input" type="date" id="end">
-                                <label class="mdl-textfield__label" for="start">End</label>
-                            </div>
-
                         </form>
                     </div>
                 </div>
@@ -75,4 +78,8 @@
             Copyright (C) 2019, Nane Kratzke
         </div>
     </div>
+    <script>
+        filterHandler();
+        refreshFilter();
+    </script>
 </body>
