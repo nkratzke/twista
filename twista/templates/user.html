@@ -2,6 +2,67 @@
 
 {% block content %}
 
+<div class="mdl-grid">
+    <div class="mdl-cell mdl-cell--4-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">User @{{ user['screen_name'] }}</h2>
+            </div>
+            <div class="mdl-card__supporting-text">
+                {{ user['description'] | safe }}
+            </div>
+            <div class="mdl-card__supporting-text">
+                {% if user['url'] %}
+                <a class="web" href="{{ user['url'] }}">Link</a><br>
+                {% endif %}
+                Since: <span class="created">{{ user['created_at'] }}</span><br>
+                Location: <span class="location">{{ user['location'] }}</span><br>
+                Follower: <span class="follower">{{ user['friends'] }}</span><br>
+                Listed: <span class="listed">{{ user['listed'] }}</span><br>
+                Posts: <span class="posts">{{ user['statuses'] }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="mdl-cell mdl-cell--4-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Posting behaviour</h2>
+            </div>
+            <div class="mdl-card__supporting-text">
+                <div class="mdl-spinner mdl-js-spinner is-active"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mdl-cell mdl-cell--4-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Retweeting network</h2>
+            </div>
+            <div class="mdl-card__supporting-text">
+                <div class="mdl-spinner mdl-js-spinner is-active"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mdl-cell mdl-cell--12-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Tweet activity network</h2>
+            </div>
+            <div class="mdl-card__supporting-text" id="activity">
+                <script>
+                    load("/user/{{ user['id'] }}/activity", { 
+                        'begin': localStorage.getItem('begin'), 
+                        'end': localStorage.getItem('end')
+                    }, 'activity');
+                </script>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--
 <div class="user">
     <h2>
         <a href="https://twitter.com/{{ user['screen_name'] }}"><img class="logo" src="{{ url_for('static', filename='twitter-logo.png') }}"></a>
@@ -12,14 +73,7 @@
         <div class="description">
             {{ user['description'] }}
         </div>
-        {% if user['url'] %}
-        <a class="web" href="{{ user['url'] }}">Link</a><br>
-        {% endif %}
-        Since: <span class="created">{{ user['created_at'] }}</span><br>
-        Location: <span class="location">{{ user['location'] }}</span><br>
-        Follower: <span class="follower">{{ user['friends'] }}</span><br>
-        Listed: <span class="listed">{{ user['listed'] }}</span><br>
-        Posts: <span class="posts">{{ user['statuses'] }}</span>
+
     </div>
 
     <div class="timeline">
@@ -65,4 +119,6 @@
     </div>
 
 </div>
+-->
+
 {% endblock %}

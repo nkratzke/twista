@@ -272,10 +272,10 @@ def trending_tweets():
 @app.route('/search')
 def search():
     entity = request.args.get("entity")
-    if entity == "tweet":
-        return redirect(url_for('trending_tweets'))
-    else:
+    if entity == "user":
         return redirect(url_for('trending_users'))
+    else:
+        return redirect(url_for('trending_tweets'))
 
 def start(settings):
     global graph
