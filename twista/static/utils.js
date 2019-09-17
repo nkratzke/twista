@@ -1,5 +1,5 @@
 
-function loadJson(url, callback) {
+function loadJson(url, params, callback) {
     var xmlhttp = new XMLHttpRequest();
 
     xmlhttp.onreadystatechange = function() {
@@ -7,16 +7,17 @@ function loadJson(url, callback) {
             callback(JSON.parse(this.responseText));
         }
     };
-    xmlhttp.open("GET", url, true);
+    xmlhttp.open("GET", url + "?" + buildURLQuery(params), true);
     xmlhttp.send();
 }
 
-function load(url, params, id) {
-    document.getElementById(id).innerHTML = '<div class="mdl-spinner mdl-js-spinner is-active"></div>'
+function loadText(url, params, callback) {
     var xmlhttp = new XMLHttpRequest();
+
     xmlhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
-            document.getElementById(id).innerHTML = this.responseText;
+            callback(this.responseText);
+            refreshFilter();
         }
     };
     xmlhttp.open("GET", url + "?" + buildURLQuery(params), true);
@@ -29,40 +30,31 @@ function buildURLQuery(map) {
                  .join('&');
 }
 
-function filterHandler() {
-    console.log("filterHandler");
-    // Stores filter settings in localstorage
-    document.querySelectorAll("#filter input").forEach(i => i.addEventListener("change", () => {
-        console.log("Filter change ... ")
-        localStorage.setItem("searchterm", document.querySelector("#filter #searchterm").value);
-        localStorage.setItem("entity", document.querySelector("#filter #tweets").checked ? "tweet" : "user");
-        localStorage.setItem("begin", document.querySelector("#filter #begin").value);
-        localStorage.setItem("end", document.querySelector("#filter #end").value);
+function plot(into, data) {
+    into.querySelector('.mdl-spinner').remove();
+    var div = document.createElement('div');
+    into.prepend(div);
+    Plotly.newPlot(div, data, { }, { 
+        'responsive': true 
+    });
+}
 
-        document.querySelectorAll("a.filtered").forEach(link => {
-            link.setAttribute('href', link.getAttribute('base') + "?" + buildURLQuery({
-                'searchterm': localStorage.getItem("searchterm") || "",
-                'entity': localStorage.getItem("entity") == "tweet" ? "tweet" : "user",
-                'begin': localStorage.getItem("begin") || "",
-                'end': localStorage.getItem("end") || "",
-            }));
-        });
+function observeFilter() {
+    document.querySelector("#filter #begin").value = localStorage.getItem("begin") || "";
+    document.querySelector("#filter #end").value = localStorage.getItem("end") || "";
+    document.querySelectorAll("#filter #begin, #filter #end").forEach(e => e.addEventListener('change', () => {
+        localStorage.setItem('begin', document.querySelector("#filter #begin").value || "");
+        localStorage.setItem('end', document.querySelector("#filter #end").value || "");
+        refreshFilter();
     }));
 }
 
 function refreshFilter() {
     document.querySelectorAll("a.filtered").forEach(link => {
-        link.setAttribute('base', link.getAttribute('href'));
-        link.setAttribute('href', link.getAttribute('base') + "?" + buildURLQuery({
-            'searchterm': localStorage.getItem("searchterm") || "",
-            'entity': localStorage.getItem("entity") == "tweet" ? "tweet" : "user",
+        const url = new URL(link.getAttribute('href'), window.location.origin)
+        link.setAttribute('href', url.origin + url.pathname + "?" + buildURLQuery({
             'begin': localStorage.getItem("begin") || "",
             'end': localStorage.getItem("end") || "",
         }));
     });
-    document.querySelector("#filter #searchterm").value = localStorage.getItem('searchterm');
-    document.querySelector("#filter #users").checked = localStorage.getItem('entity') == "user";
-    document.querySelector("#filter #tweets").checked = !document.querySelector("#filter #users").checked;
-    document.querySelector("#filter #begin").value = localStorage.getItem('begin');
-    document.querySelector("#filter #end").value = localStorage.getItem('end');
 }

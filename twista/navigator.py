@@ -1,4 +1,4 @@
-from flask import Flask, escape, request, Response, render_template, redirect, url_for
+from flask import Flask, escape, request, Response, render_template, redirect, url_for, jsonify
 from py2neo import Graph
 from collections import Counter
 from datetime import datetime as dt
@@ -6,6 +6,8 @@ from datetime import timedelta
 import json
 import os
 from dateutil import parser
+import random as rand
+import string
 
 templates = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'templates')
 statics = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static')
@@ -39,6 +41,12 @@ def chip(content, data=None):
             f'</span>'
         ])
     return f'<span class="mdl-chip"><span class="mdl-chip__text">{ content }</span></span>'
+
+def link(content, url, classes=None):
+    if classes:
+        cs = " ".join(classes)
+        return f"<a class={ cs } href='{ url }'>{ content }</a>"
+    return f"<a href='{ url }'>{ content }</a>"
 
 @app.template_filter()
 def datetime(dt):
@@ -177,51 +185,102 @@ def trending_users():
 @app.route('/user/<id>')
 def user_as_html(id):
     result = graph.run("MATCH (u:User{id: {id}}) RETURN u", id=id).evaluate()
-    tags = graph.run("""
-        MATCH (u:User{id: {id}}) -[:POSTS]-> (t:Tweet) <-[:REFERS_TO*]- (refs:Tweet) -[:HAS_TAG]-> (tag:Tag)
-        RETURN collect(tag.id)
-        """, id=id).evaluate()
+    return render_template('user.html', user=result)
 
-    retweeters = [r['rt'] for r in graph.run("""
-        MATCH (u:User{id: {id}}) -[:POSTS]-> (:Tweet) <-[:REFERS_TO]- (:Tweet{type:'retweet'}) <-[:POSTS]- (rt:User)
-        RETURN rt
-        """, id=id).data()]
+@app.route('/user/<id>/behaviour')
+def user_behaviour(id):
+    begin = request.args.get("begin", default="1970-01-01")
+    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
 
-    volume = [(r['date'], r['n']) for r in graph.run("""
-        MATCH (:User{id: {id}}) -[:POSTS]-> (t:Tweet)
-        WHERE t.created_at > datetime("2019-04-01")
-        RETURN date(t.created_at) AS date, count(t) as n ORDER BY date
-        """, id=id)]
+    result = [(r['type'], r['n']) for r in graph.run("""
+        MATCH (u:User{id: {id}}) -[:POSTS]-> (t:Tweet)
+        WHERE t.created_at >= datetime({begin}) AND t.created_at <= datetime({end})
+        RETURN t.type AS type, count(t) AS n
+        """, id=id, begin=begin, end=end)]
+
+    return jsonify([{
+        'labels': [t for t, n in result],
+        'values': [n for t, n in result],
+        'type': 'pie'
+    }])
+
+@app.route('/user/<id>/activity')
+def user_activity(id):
+    begin = request.args.get("begin", default="1970-01-01")
+    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+
+    posts = [(r['date'], r['n']) for r in graph.run("""
+        MATCH (u:User{id: {id}}) -[:POSTS]-> (t:Tweet)
+        WHERE t.created_at >= datetime({begin}) AND t.created_at <= datetime({end})
+        RETURN date(t.created_at) AS date, count(t) AS n
+        ORDER BY date
+        """, id=id, begin=begin, end=end)]
 
     reactions = [(r['date'], r['n']) for r in graph.run("""
-        MATCH (:User{id: {id}}) -[:POSTS]-> (:Tweet) <-[:REFERS_TO*]- (r:Tweet)
-        WHERE r.created_at > datetime("2019-04-01")
-        RETURN date(r.created_at) as date, count(r) as n ORDER BY date
-        """, id=id)]
+        MATCH (u:User{id: {id}}) -[:POSTS]-> (:Tweet) <-[:REFERS_TO*]- (o:Tweet)
+        WHERE o.created_at >= datetime({begin}) AND o.created_at <= datetime({end})
+        RETURN date(o.created_at) AS date, count(o) AS n
+        ORDER BY date
+        """, id=id, begin=begin, end=end)]
 
-    behaviour = [(r['type'], r['n']) for r in graph.run("""
-        MATCH (u:User{id: {id}}) -[:POSTS]-> (t:Tweet) 
-        RETURN t.type AS type, count(t) AS n
-        ORDER BY type
-        """, id=id)]
+    return jsonify([{
+        'x': [str(t) for t, n in posts],
+        'y': [n for t, n in posts],
+        'name': 'posts',
+        'type': 'scatter'
+    }, {
+        'x': [str(t) for t, n in reactions],
+        'y': [n for t, n in reactions],
+        'name': 'reactions',
+        'type': 'scatter'
+    }])
 
-    return render_template('user.html', 
-        user=result, 
-        tags=Counter(tags).most_common(100),
-        retweeters=Counter(retweeters).most_common(100),
-        actions = {
-            'xs': [str(d) for d, n in volume],
-            'ys': [n for d, n in volume]
-        },
-        reactions = {
-            'xs': [str(d) for d, n in reactions],
-            'ys': [n for d, n in reactions]
-        },
-        behaviour = {
-            'types': [t for t, n in behaviour],
-            'n': [n for t, n in behaviour]
-        }
-    )
+@app.route('/user/<id>/retweeters')
+def user_retweeters(id):
+    begin = request.args.get("begin", default="1970-01-01")
+    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+
+    result = "".join([link(chip("@" + r['user']['screen_name'], data=r['n']), f"/user/{ r['user']['id'] }", classes=['filtered']) for r in graph.run("""
+        MATCH (u:User{id: {id}}) -[:POSTS]-> (t:Tweet) <-[:REFERS_TO]- (:Tweet) <-[:POSTS]- (user:User)
+        WHERE t.created_at >= datetime({begin}) AND t.created_at <= datetime({end})
+        RETURN user, count(user) AS n
+        ORDER BY n DESCENDING
+        LIMIT 50
+        """, id=id, begin=begin, end=end)])
+
+    return result
+
+@app.route('/user/<id>/tags')
+def user_tags(id):
+    begin = request.args.get("begin", default="1970-01-01")
+    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+
+    result = "".join([link(chip("#" + r['tag'], data=r['n']), f"/tag/{ r['tag'] }", classes=['filtered']) for r in graph.run("""
+        MATCH (u:User{id: {id}}) -[:POSTS]-> (t:Tweet) -[:HAS_TAG]-> (tag:Tag)
+        WHERE t.created_at >= datetime({begin}) AND t.created_at <= datetime({end})
+        RETURN tag.id AS tag, count(tag) AS n
+        ORDER BY n DESCENDING
+        LIMIT 50
+        """, id=id, begin=begin, end=end)])
+
+    return result
+
+@app.route('/user/<id>/tweets')
+def user_tweets(id):
+    begin = request.args.get("begin", default="1970-01-01")
+    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+
+    tweets = [{ 'tweet': r['t'], 'user': r['u'] } for r in graph.run("""
+        MATCH (u:User{id: {id}}) -[:POSTS]-> (t:Tweet) <-[:REFERS_TO*]- (r:Tweet)
+        WHERE t.type <> 'retweet' AND 
+              t.created_at >= datetime({begin}) AND 
+              t.created_at <= datetime({end})
+        RETURN t, u, count(t) AS n
+        ORDER BY n DESCENDING
+        LIMIT 50
+        """, id=id, begin=begin, end=end)]
+
+    return tweetlist(tweets)
 
 @app.route('/tweets')
 def trending_tweets():

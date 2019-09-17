@@ -23,102 +23,102 @@
             </div>
         </div>
     </div>
-    <div class="mdl-cell mdl-cell--4-col">
-        <div class="mdl-card mdl-shadow--2dp">
-            <div class="mdl-card__title">
-                <h2 class="mdl-card__title-text">Posting behaviour</h2>
-            </div>
-            <div class="mdl-card__supporting-text">
-                <div class="mdl-spinner mdl-js-spinner is-active"></div>
-            </div>
-        </div>
-    </div>
 
     <div class="mdl-cell mdl-cell--4-col">
         <div class="mdl-card mdl-shadow--2dp">
             <div class="mdl-card__title">
                 <h2 class="mdl-card__title-text">Retweeting network</h2>
             </div>
-            <div class="mdl-card__supporting-text">
+            <div id='retweeters' class="mdl-card__supporting-text">
                 <div class="mdl-spinner mdl-js-spinner is-active"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="mdl-cell mdl-cell--12-col">
-        <div class="mdl-card mdl-shadow--2dp">
-            <div class="mdl-card__title">
-                <h2 class="mdl-card__title-text">Tweet activity network</h2>
-            </div>
-            <div class="mdl-card__supporting-text" id="activity">
                 <script>
-                    load("/user/{{ user['id'] }}/activity", { 
-                        'begin': localStorage.getItem('begin'), 
-                        'end': localStorage.getItem('end')
-                    }, 'activity');
+                    loadText("/user/{{ user['id'] }}/retweeters", { 
+                            'begin': localStorage.getItem('begin'), 
+                            'end': localStorage.getItem('end')
+                        }, 
+                        response => document.getElementById('retweeters').innerHTML = response
+                    );
                 </script>
             </div>
         </div>
     </div>
-</div>
 
-<!--
-<div class="user">
-    <h2>
-        <a href="https://twitter.com/{{ user['screen_name'] }}"><img class="logo" src="{{ url_for('static', filename='twitter-logo.png') }}"></a>
-        @{{ user['screen_name'] }}
-    </h2>
-
-    <div class="meta">
-        <div class="description">
-            {{ user['description'] }}
+    <div class="mdl-cell mdl-cell--4-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Associated tags</h2>
+            </div>
+            <div id='tags' class="mdl-card__supporting-text">
+                <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                <script>
+                    loadText("/user/{{ user['id'] }}/tags", { 
+                            'begin': localStorage.getItem('begin'), 
+                            'end': localStorage.getItem('end')
+                        }, 
+                        response => document.getElementById('tags').innerHTML = response
+                    );
+                </script>
+            </div>
         </div>
-
     </div>
 
-    <div class="timeline">
-        <h2>Activity</h2>
-        <div id="uservolume"></div>
-        <div id="behaviour"></div>
-        <script>
-            Plotly.newPlot('uservolume', [{
-                x: {{ actions['xs'] | safe }},
-                y: {{ actions['ys'] }},
-                type: 'scatter',
-                line: {shape: 'spline'},
-                name: "Posts",
-            }, {
-                x: {{ reactions['xs'] | safe }},
-                y: {{ reactions['ys'] }},
-                type: 'scatter',
-                line: {shape: 'spline'},
-                name: "Reactions"
-            }]);
-        </script>
-        <script>
-            Plotly.newPlot("behaviour", [{
-                values: {{ behaviour['n'] }},
-                labels: {{ behaviour['types'] | safe }},
-                type: 'pie'
-            }]);
-        </script>
+    <div class="mdl-cell mdl-cell--8-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Posting activity</h2>
+            </div>
+            <div id='activity' class="mdl-card__supporting-text">
+                <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                <script>
+                    loadJson("/user/{{ user['id'] }}/activity", { 
+                            'begin': localStorage.getItem('begin'), 
+                            'end': localStorage.getItem('end')
+                        }, 
+                        data => plot(document.getElementById('activity'), data)
+                    );
+                </script>
+            </div>
+        </div>
     </div>
 
-    <div class="retweeters">
-        <h2>Retweeting network</h2>
-        {% for retweeter, n in retweeters %}
-        {{ ("@" + retweeter['screen_name']) | mark(n=n, link="/user/" + retweeter['id']) | safe }}
-        {% endfor %}
+    <div class="mdl-cell mdl-cell--4-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Posting behaviour</h2>
+            </div>
+            <div id='behaviour' class="mdl-card__supporting-text">
+                <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                <script>
+                    loadJson("/user/{{ user['id'] }}/behaviour", { 
+                            'begin': localStorage.getItem('begin'), 
+                            'end': localStorage.getItem('end')
+                        }, 
+                        data => plot(document.getElementById('behaviour'), data)
+                    );
+                </script>
+            </div>
+        </div>
+    </div>
+
+    <div class="mdl-cell mdl-cell--8-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Tweets with maximum impact</h2>
+            </div>
+            <div id='tweetlist' class="mdl-card__supporting-text">
+                <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                <script>
+                    loadText("/user/{{ user['id'] }}/tweets", { 
+                            'begin': localStorage.getItem('begin'), 
+                            'end': localStorage.getItem('end')
+                        }, 
+                        response => document.getElementById('tweetlist').innerHTML = response
+                    );
+                </script>
+            </div>
+        </div>
     </div>
     
-    <div class="tags">
-        <h2>Correlated tags</h2>
-        {% for tag, n in tags %}
-        {{ ("#" + tag) | mark(n=n, link="/tag/" + tag) | safe }}
-        {% endfor %}
-    </div>
-
 </div>
--->
 
 {% endblock %}

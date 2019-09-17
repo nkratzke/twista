@@ -44,13 +44,6 @@
                     <div class="mdl-cell mdl-cell--12-col">
                         <form id="filter">
                             <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label has-placeholder">
-                                <input class="mdl-textfield__input" type="text" name="searchterm" id="searchterm">
-                                <label class="mdl-textfield__label" for="searchterm">Search for ...</label>
-                            </div>
-                            <button class="mdl-button mdl-js-button mdl-button--colored">
-                                <i class="material-icons">search</i>Search
-                            </button>
-                            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label has-placeholder">
                                 <input class="mdl-textfield__input" type="date" name="begin" id="begin">
                                 <label class="mdl-textfield__label" for="begin">Begin</label>
                             </div>
@@ -58,15 +51,9 @@
                                 <input class="mdl-textfield__input" type="date" name="end" id="end">
                                 <label class="mdl-textfield__label" for="end">End</label>
                             </div>
-                            <br>
-                            <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="tweets">
-                                <input type="radio" id="tweets" class="mdl-radio__button" name="entity" value="tweet">
-                                <span class="mdl-radio__label">Tweets</span>
-                            </label>
-                            <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="users">
-                                <input type="radio" id="users" class="mdl-radio__button" name="entity" value="user">
-                                <span class="mdl-radio__label">Users</span>
-                            </label>
+                            <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored">
+                                <i class="material-icons">filter_list</i>
+                            </button>
                         </form>
                     </div>
                 </div>
@@ -79,7 +66,7 @@
         </div>
     </div>
     <script>
-        filterHandler();
+        observeFilter();
         refreshFilter();
     </script>
 </body>
