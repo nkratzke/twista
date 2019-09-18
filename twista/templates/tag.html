@@ -3,70 +3,102 @@
 {% block content %}
 
 <div class="mdl-grid">
-    <div class="mdl-cell mdl-cell--12-col">
+
+    <div class="mdl-cell mdl-cell--8-col">
         <div class="mdl-card mdl-shadow--2dp">
             <div class="mdl-card__title">
-                <h2 class="mdl-card__title-text">Tag #{{ tag }}</h2>
+                <h2 class="mdl-card__title-text">Tweet volume of the hashtag #{{ tag }}</h2>
             </div>
-            <div class="mdl-card__supporting-test">
-                <div id="tagvolume"></div>
+            <div id='timeline' class="mdl-card__supporting-text">
+                <div class="mdl-spinner mdl-js-spinner is-active"></div>
                 <script>
-                    Plotly.newPlot('tagvolume', [{
-                        x: {{ timeline['xs'] | safe }},
-                        y: {{ timeline['ys'] }},
-                        type: 'scatter',
-                        line: {shape: 'spline'}
-                    }], {
-                        yaxis: {
-                            title: 'Tweets per day'
-                        }
-                    }, {
-                        responsive: true,
-                        displayModeBar: false
-                    });
+                    loadJson("/tag/{{ tag }}/activity", { 
+                            'begin': localStorage.getItem('begin'), 
+                            'end': localStorage.getItem('end')
+                        }, 
+                        data => plot(document.getElementById('timeline'), data)
+                    );
                 </script>
             </div>
         </div>
     </div>
-    <div class="mdl-cell mdl-cell--8-col">
-        <div class="mdl-card mdl-shadow--2dp">
-            <div class="mdl-card__title">
-                <h2 class="mdl-card__title-text">Timeline</h2>
-            </div>
-            <div class="mdl-card__supporting-text">
-                {{ tweets | tweetlist | safe }}
-            </div>
-        </div>
-    </div>
+
     <div class="mdl-cell mdl-cell--4-col">
         <div class="mdl-card mdl-shadow--2dp">
             <div class="mdl-card__title">
-                <h2 class="mdl-card__title-text">Observed tags</h2>
+                <h2 class="mdl-card__title-text">Posting types</h2>
             </div>
-            <div class="mdl-card__supporting-text">
-                {% for tag, n in tags %}
-                <a href="/tag/{{ tag }}" class="filtered"><span class="mdl-chip mdl-chip--contact">
-                    <span class="mdl-chip__contact mdl-color--indigo mdl-color-text--white">{{ n }}</span>
-                    <span class="mdl-chip__text">#{{ tag }}</span>
-                </span></a>
-            {% endfor %}
+            <div id='behaviour' class="mdl-card__supporting-text">
+                <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                <script>
+                    loadJson("/tag/{{ tag }}/behaviour", { 
+                            'begin': localStorage.getItem('begin'), 
+                            'end': localStorage.getItem('end')
+                        }, 
+                        data => plot(document.getElementById('behaviour'), data)
+                    );
+                </script>
             </div>
         </div>
+    </div>
 
+    <div class="mdl-cell mdl-cell--4-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Most correlated tags</h2>
+            </div>
+            <div id='correlated' class="mdl-card__supporting-text">
+                <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                <script>
+                    loadText("/tag/{{ tag }}/tags", { 
+                            'begin': localStorage.getItem('begin'), 
+                            'end': localStorage.getItem('end')
+                        }, 
+                        response => document.getElementById('correlated').innerHTML = response
+                    );
+                </script>
+            </div>
+        </div>
+    </div>
+
+    <div class="mdl-cell mdl-cell--4-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Most posting users</h2>
+            </div>
+            <div id='mentioned-users' class="mdl-card__supporting-text">
+                <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                <script>
+                    loadText("/tag/{{ tag }}/posting_users", { 
+                            'begin': localStorage.getItem('begin'), 
+                            'end': localStorage.getItem('end')
+                        }, 
+                        response => document.getElementById('mentioned-users').innerHTML = response
+                    );
+                </script>
+            </div>
+        </div>
+    </div>
+
+    <div class="mdl-cell mdl-cell--4-col">
         <div class="mdl-card mdl-shadow--2dp">
             <div class="mdl-card__title">
                 <h2 class="mdl-card__title-text">Most mentioned users</h2>
             </div>
-            <div class="mdl-card__supporting-text">
-                {% for usr, n in mentions %}
-                <a href="/user/{{ usr['id'] }}"><span class="mdl-chip mdl-chip--contact">
-                    <span class="mdl-chip__contact mdl-color--indigo mdl-color-text--white">{{ n }}</span>
-                    <span class="mdl-chip__text">@{{ usr['screen_name'] }}</span>
-                </span></a>
-            {% endfor %}
+            <div id='posting-users' class="mdl-card__supporting-text">
+                <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                <script>
+                    loadText("/tag/{{ tag }}/mentioned_users", { 
+                            'begin': localStorage.getItem('begin'), 
+                            'end': localStorage.getItem('end')
+                        }, 
+                        response => document.getElementById('posting-users').innerHTML = response
+                    );
+                </script>
             </div>
         </div>
     </div>
+
 </div>
 
 {% endblock %}

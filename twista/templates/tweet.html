@@ -3,83 +3,99 @@
 {% block content %}
 
 <div class="mdl-grid">
-    <div class="mdl-cell mdl-cell--8-col">
+    <div class="mdl-cell mdl-cell--12-col">
         {{ tweet | render_tweet(of=user, ctx=ctx) | safe }}
     </div>
-    <div class="mdl-cell mdl-cell--4-col">
-        {{  "" | card(title='Observed interactions', media='<div id="timeline"></div>') | safe  }}
-        <script>
-            var data = [{
-                x: {{ timeline['xs'] }},
-                y: {{ timeline['ys'] }},
-                type: 'scatter',
-                line: {shape: 'spline'}
-            }];
-            var layout = {
-                height: 200,
-                margin: {
-                    l: 100,
-                    r: 50,
-                    b: 10,
-                    t: 10,
-                    pad: 5
-                },
-                yaxis: {
-                    title: 'User reactions per hour',
-                    automargin: true,
-                },
-                xaxis: {
-                    automargin: true,
-                }
-            };
-            config = {
-                responsive: true,
-                displayModeBar: false
-            }
-            Plotly.newPlot('timeline', data, layout, config);
-        </script>
-    </div>    
-</div>
 
-<div class="mdl-grid">
-    <div class="mdl-cell mdl-cell--8-col">
+    <div class="mdl-cell mdl-cell--6-col">
         <div class="mdl-card mdl-shadow--2dp">
             <div class="mdl-card__title">
-                <h2 class="mdl-card__title-text">Timeline</h2>
+                <h2 class="mdl-card__title-text">Interaction history</h2>
             </div>
-            <div class="mdl-card__supporting-text">
-                {{ full_ctx | tweetlist | safe }}   
-            </div>          
-        </div>
-    </div>
-    <div class="mdl-cell mdl-cell--4-col">
-        <div class="mdl-card mdl-shadow--2dp">
-            <div class="mdl-card__title">
-                <h2 class="mdl-card__title-text">Observed users</h2>
-            </div>
-
-            <div class="mdl-card__supporting-text">
-            {% for usr, n in user_ctx %}
-            <a href="/user/{{ usr['id'] }}"><span class="mdl-chip mdl-chip--contact">
-                    <span class="mdl-chip__contact mdl-color--indigo mdl-color-text--white">{{ n }}</span>
-                    <span class="mdl-chip__text">@{{ usr['screen_name'] }}</span>
-                </span></a>
-            {% endfor %}
-            </div>
-        </div>
-        <div class="mdl-card mdl-shadow--2dp">
-            <div class="mdl-card__title">
-                <h2 class="mdl-card__title-text">Observed tags</h2>
-            </div>
-            <div class="mdl-card__supporting-text">
-            {% for tag, n in tags %}
-            <a href="/tag/{{ tag }}"><span class="mdl-chip mdl-chip--contact">
-                    <span class="mdl-chip__contact mdl-color--indigo mdl-color-text--white">{{ n }}</span>
-                    <span class="mdl-chip__text">#{{ tag }}</span>
-                </span></a>
-            {% endfor %}
+            <div id='interaction-timeline' class="mdl-card__supporting-text">
+                <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                <script>
+                    loadJson("/tweet/{{ tweet['id'] }}/interactions", { 
+                            'begin': localStorage.getItem('begin'), 
+                            'end': localStorage.getItem('end')
+                        }, 
+                        data => plot(document.getElementById('interaction-timeline'), data)
+                    );
+                </script>
             </div>
         </div>
     </div>
+
+    <div class="mdl-cell mdl-cell--6-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Interaction types</h2>
+            </div>
+            <div id='interaction-types' class="mdl-card__supporting-text">
+                <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                <script>
+                    loadJson("/tweet/{{ tweet['id'] }}/interaction-types", { 
+                            'begin': localStorage.getItem('begin'), 
+                            'end': localStorage.getItem('end')
+                        }, 
+                        data => plot(document.getElementById('interaction-types'), data)
+                    );
+                </script>
+            </div>
+        </div>
+    </div>
+
+    <div class="mdl-cell mdl-cell--6-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Interacting tweets (chronological)</h2>
+            </div>
+            <div id='interaction-tweets' class="mdl-card__supporting-text">
+                <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                <script>
+                    loadText("/tweet/{{ tweet['id'] }}/tweets", { 
+                            'begin': localStorage.getItem('begin'), 
+                            'end': localStorage.getItem('end')
+                        }, 
+                        response => document.getElementById('interaction-tweets').innerHTML = response
+                    );
+                </script>
+            </div>
+        </div>
+    </div>
+
+    <div class="mdl-cell mdl-cell--6-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Observed users in interactions</h2>
+            </div>
+            <div id='observed-users' class="mdl-card__supporting-text">
+                <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                <script>
+                    loadText("/tweet/{{ tweet['id'] }}/users", { 
+                            'begin': localStorage.getItem('begin'), 
+                            'end': localStorage.getItem('end')
+                        }, 
+                        response => document.getElementById('observed-users').innerHTML = response
+                    );
+                </script>
+            </div>
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Observed tags in interactions</h2>
+            </div>
+            <div id='observed-tags' class="mdl-card__supporting-text">
+                <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                <script>
+                    loadText("/tweet/{{ tweet['id'] }}/tags", { 
+                            'begin': localStorage.getItem('begin'), 
+                            'end': localStorage.getItem('end')
+                        }, 
+                        response => document.getElementById('observed-tags').innerHTML = response
+                    );
+                </script>
+            </div>
+        </div>
+    </div>
+    
 </div>
 {% endblock %}

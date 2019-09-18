@@ -52,9 +52,8 @@ function observeFilter() {
 function refreshFilter() {
     document.querySelectorAll("a.filtered").forEach(link => {
         const url = new URL(link.getAttribute('href'), window.location.origin)
-        link.setAttribute('href', url.origin + url.pathname + "?" + buildURLQuery({
-            'begin': localStorage.getItem("begin") || "",
-            'end': localStorage.getItem("end") || "",
-        }));
+        url.searchParams.set('begin', localStorage.getItem("begin") || "");
+        url.searchParams.set('end', localStorage.getItem("end") || "");
+        link.setAttribute('href', url.href);
     });
 }
