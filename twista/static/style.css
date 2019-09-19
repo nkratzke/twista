@@ -95,3 +95,7 @@ table thead th {
 table tr, table td {
     padding: 0.75em;
 }
+
+#network {
+    height: 750px;
+}

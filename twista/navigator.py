@@ -42,47 +42,18 @@ def chip(content, data=None):
         ])
     return f'<span class="mdl-chip"><span class="mdl-chip__text">{ content }</span></span>'
 
-def link(content, url, classes=None):
-    if classes:
-        cs = " ".join(classes)
-        return f"<a class='{ cs }' href='{ url }'>{ content }</a>"
-    return f"<a href='{ url }'>{ content }</a>"
+@app.template_filter()
+def link(content, url, classes=[]):
+    cs = " ".join(classes)
+    return f"<a class='{ cs }' href='{ url }'>{ content }</a>"
 
 @app.template_filter()
 def datetime(dt):
     return parser.parse(str(dt)).strftime("%Y-%m-%d %H:%M:%S")
 
 @app.route('/')
-def hello():
-    return redirect(url_for('search'))
-
-@app.route('/tags')
-def trending_tags():
-    print(request.args)
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
-
-    result = [(r['tag'], r['n']) for r in graph.run("""
-        MATCH (tag:Tag) <-[:HAS_TAG]- (t:Tweet)
-        WHERE t.created_at >= datetime({begin}) AND t.created_at <= datetime({end})
-        RETURN tag.id AS tag, count(t) AS n
-        ORDER BY n DESCENDING LIMIT 100
-        """, begin=begin, end=end)]
-
-    tags = [t for t, n in result[0:10]]
-    timelines = graph.run("""
-        UNWIND {tags} AS tg
-        MATCH (t:Tweet) -[:HAS_TAG]-> (:Tag{id: tg})
-        WHERE t.created_at >= datetime({begin}) AND t.created_at <= datetime({end})
-        RETURN tg, date(t.created_at) as date, count(t) as n
-        ORDER BY date
-        """, tags=tags, begin=begin, end=end).data()
-    data = { t: { 
-            'xs': [str(e['date']) for e in timelines if e['tg'] == t],
-            'ys': [e['n'] for e in timelines if e['tg'] == t]
-        } for t in tags }
-
-    return render_template('tags.html', tags=result, timelines=data)
+def index():
+    return render_template('index.html')
 
 @app.route('/tag/<id>')
 def tag(id):
@@ -222,17 +193,6 @@ def tweet(id):
         RETURN tweet, usr
         ORDER BY tweet.created_at DESCENDING
         """, id=id, begin=begin, end=end)]
-
-    # full_context = [{ 'tweet': ctx['ctx'], 'user': ctx['usr'] } for ctx in graph.run("""
-    #     MATCH (:Tweet{id: {id}}) -[:REFERS_TO*]- (ctx:Tweet) <-[:POSTS]- (usr:User)
-    #     RETURN ctx, usr
-    #     ORDER BY ctx.created_at DESCENDING
-    #     """, id=id)]
-
-    # tags = graph.run("""
-    #     MATCH (:Tweet{id: {id}}) -[:REFERS_TO*]- (ctx:Tweet) -[:HAS_TAG]-> (tag:Tag)
-    #     RETURN collect(tag.id)
-    #     """, id=id).evaluate()
     
     return render_template('tweet.html', 
         tweet=tweet, 
@@ -339,20 +299,6 @@ def tweet_related_tweets(id):
 
     return tweetlist(tweets)
 
-
-@app.route("/users")
-def trending_users():
-    search = request.args.get("searchterm")
-
-    result = graph.run("""
-        CALL db.index.fulltext.queryNodes('users', { search }) YIELD node AS user, score
-        OPTIONAL MATCH (user:User) -[:POSTS]-> (:Tweet) <-[:REFERS_TO]- (r:Tweet)
-        RETURN user, count(r) AS qty, score ORDER BY qty DESCENDING, score DESCENDING
-        LIMIT 1000
-        """, search=search)
-
-    return render_template('users.html', users=[ (t['user'], t['qty']) for t in result])
-
 @app.route('/user/<id>')
 def user_as_html(id):
     result = graph.run("MATCH (u:User{id: {id}}) RETURN u", id=id).evaluate()
@@ -458,66 +404,191 @@ def user_tweets(id):
         WHERE t.type <> 'retweet' AND 
               t.created_at >= datetime({begin}) AND 
               t.created_at <= datetime({end})
-        RETURN t, u, count(t) AS n
+        RETURN t, u, count(r) AS n
         ORDER BY n DESCENDING
         LIMIT 50
         """, id=id, begin=begin, end=end)]
 
     return tweetlist(tweets)
 
-@app.route('/tweets')
-def trending_tweets():
+@app.route('/user/<id>/network')
+def user_network(id):
 
-    searchterm = request.args.get("searchterm", default="n")
     begin = request.args.get("begin", default="1970-01-01")
     end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
 
-    result = graph.run("""
-        CALL db.index.fulltext.queryNodes('tweets', { searchterm }) YIELD node AS tweet, score
-        WHERE tweet.type <> 'retweet' AND tweet.created_at >= datetime({ begin }) AND tweet.created_at <= datetime({ end })
-        MATCH (r:Tweet) -[:REFERS_TO]- (tweet) <-[:POSTS]- (usr:User)
-        RETURN tweet, usr, score, count(r) AS n ORDER BY n DESCENDING, tweet.created_at DESCENDING, score DESCENDING
-        LIMIT 100
-        """, searchterm=searchterm, begin=begin, end=end)
+    user = graph.run("MATCH (u:User{id: {id}}) RETURN u", id=id).evaluate()
 
-    timeline = [(t['date'], t['n']) for t in graph.run("""
-        CALL db.index.fulltext.queryNodes('tweets', { searchterm }) YIELD node AS tweet, score
-        WHERE tweet.created_at >= datetime({ begin }) AND tweet.created_at <= datetime({ end })
-        RETURN date(tweet.created_at) AS date, count(tweet) AS n ORDER BY date
-        """, searchterm=searchterm, begin=begin, end=end)]
+    retweeters = [(r['u'], r['rt'], r['n']) for r in graph.run("""
+        MATCH (u:User{id: {id}}) -[:POSTS]-> (:Tweet) <-[:REFERS_TO]- (t:Tweet{type: 'retweet'}) <-[:POSTS]- (rt:User)
+        WHERE t.created_at >= datetime({ begin }) AND t.created_at <= datetime({ end })
+        RETURN u, rt, count(rt) AS n
+        ORDER BY n DESCENDING
+        LIMIT 25
+        """, id=id, begin=begin, end=end)]
+    
+    followups = [(r['u'], r['rt'], r['n']) for r in graph.run("""
+        UNWIND {uids} AS uid
+        MATCH (u:User{id: uid}) -[:POSTS]-> (:Tweet) <-[:REFERS_TO]- (t:Tweet{type: 'retweet'}) <-[:POSTS]- (rt:User)
+        WHERE t.created_at >= datetime({ begin }) AND t.created_at <= datetime({ end })
+        RETURN u, rt, count(rt) AS n
+        ORDER BY n DESCENDING
+        LIMIT 50
+        """, uids=[r['id'] for u, r, n in retweeters], begin=begin, end=end)]
 
-    portion = [(t['type'], t['n']) for t in graph.run("""
-        CALL db.index.fulltext.queryNodes('tweets', { searchterm }) YIELD node AS tweet, score
-        WHERE tweet.created_at >= datetime({ begin }) AND tweet.created_at <= datetime({ end })
-        RETURN tweet.type AS type, count(tweet) AS n ORDER BY type
-        """, searchterm=searchterm, begin=begin, end=end)]
+    retweeters.extend(followups)
 
-    rts = graph.run("""
-        CALL db.index.fulltext.queryNodes('tweets', { searchterm }) YIELD node AS tweet, score
-        MATCH (tweet:Tweet) <-[:REFERS_TO]- (rt:Tweet{type: 'retweet'})
-        WHERE rt.created_at >= datetime({ begin }) AND rt.created_at <= datetime({ end })
-        RETURN count(rt) AS n
-        """, searchterm=searchterm, begin=begin, end=end).evaluate()
+    nodes = [u for u, _, _ in retweeters]
+    nodes.extend([rt for _, rt, _ in retweeters])
+    network = { 
+        'nodes': [{ 'data': { 'id': u['id'], 'screen_name': u['screen_name'] }} for u in set(nodes)], 
+        'edges': [{ 'data': { 'source': u['id'], 'target': rt['id'], 'qty': n }} for u, rt, n in retweeters] 
+    }
 
-    return render_template('tweets.html', 
-        tweets=[{'tweet': t['tweet'], 'user': t['usr'] } for t in result],
-        plot={
-            'xs': [str(d) for d, n in timeline],
-            'ys': [n for d, n in timeline]
-        },
-        pie={
-            'labels': ['retweet'] + [str(d) for d, n in portion],
-            'values': [rts] + [n for d, n in portion]
+    return render_template('network.html', user=user, elements=network)
+
+@app.route('/tweets/volume')
+def tweets_volume():
+
+    begin = request.args.get("begin", default="1970-01-01")
+    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+
+    tweets = [(r['date'], r['n']) for r in graph.run("""
+        MATCH (t:Tweet)
+        WHERE t.created_at >= datetime({ begin }) AND
+              t.created_at <= datetime({ end })
+        RETURN date(t.created_at) AS date, count(t) AS n
+        """, begin=begin, end=end)]
+
+    users = [(r['date'], r['n']) for r in graph.run("""
+        MATCH (t:Tweet) <-[:POSTS]- (u:User)
+        WHERE t.created_at >= datetime({ begin }) AND
+              t.created_at <= datetime({ end })
+        RETURN date(t.created_at) AS date, count(distinct(u)) AS n
+        """, begin=begin, end=end)]
+
+    return jsonify([
+        {
+            'x': [str(d) for d, n in tweets],
+            'y': [n for d, n in tweets],
+            'type': 'scatter',
+            'name': 'postings'
+        }, {
+            'x': [str(d) for d, n in users],
+            'y': [n for d, n in users],
+            'type': 'scatter',
+            'name': 'active unique users'
         }
+    ])
+
+@app.route('/tweets/tags')
+def tweets_tags_volume():
+
+    begin = request.args.get("begin", default="1970-01-01")
+    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+
+    volume = [(r['tag'], r['n']) for r in graph.run("""
+        MATCH (t:Tweet) -[:HAS_TAG]-> (tag:Tag)
+        WHERE t.created_at >= datetime({ begin }) AND
+              t.created_at <= datetime({ end })
+        RETURN tag.id AS tag, count(tag) AS n
+        ORDER BY n DESCENDING
+        LIMIT 50
+        """, begin=begin, end=end)]
+
+    return " ".join(
+        [link(chip("#" + tag, data=n), f"/tag/{tag}", classes=["filtered"]) for tag, n in volume]
     )
+
+@app.route('/tweets/posting-users')
+def tweets_most_posting_users():
+
+    begin = request.args.get("begin", default="1970-01-01")
+    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+
+    volume = [(r['u'], r['n']) for r in graph.run("""
+        MATCH (t:Tweet) <-[:POSTS]- (u:User)
+        WHERE t.created_at >= datetime({ begin }) AND
+              t.created_at <= datetime({ end })
+        RETURN u, count(t) AS n
+        ORDER BY n DESCENDING
+        LIMIT 50
+        """, begin=begin, end=end)]
+
+    return " ".join(
+        [link(chip("@" + usr['screen_name'], data=n), f"/user/{usr['id']}", classes=["filtered"]) for usr, n in volume]
+    )
+
+@app.route('/tweets/mentioned-users')
+def tweets_most_mentioned_users():
+
+    begin = request.args.get("begin", default="1970-01-01")
+    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+
+    volume = [(r['u'], r['n']) for r in graph.run("""
+        MATCH (t:Tweet) -[:MENTIONS]-> (u:User)
+        WHERE t.created_at >= datetime({ begin }) AND
+              t.created_at <= datetime({ end })
+        RETURN u, count(t) AS n
+        ORDER BY n DESCENDING
+        LIMIT 50
+        """, begin=begin, end=end)]
+
+    return " ".join(
+        [link(chip("@" + usr['screen_name'], data=n), f"/user/{usr['id']}", classes=["filtered"]) for usr, n in volume]
+    )
+
+@app.route('/tweets/types')
+def tweets_type_volume():
+
+    begin = request.args.get("begin", default="1970-01-01")
+    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+
+    volume = [(r['type'], r['n']) for r in graph.run("""
+        MATCH (t:Tweet)
+        WHERE t.created_at >= datetime({ begin }) AND
+              t.created_at <= datetime({ end })
+        RETURN t.type AS type, count(t) AS n
+        ORDER BY type
+        """, begin=begin, end=end)]
+
+    return jsonify([{
+        'labels': [t for t, n in volume],
+        'values': [n for t, n in volume],
+        'type': 'pie'
+    }])
 
 @app.route('/search')
 def search():
-    entity = request.args.get("entity")
-    if entity == "user":
-        return redirect(url_for('trending_users'))
-    else:
-        return redirect(url_for('trending_tweets'))
+    begin = request.args.get("begin", default="1970-01-01")
+    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    search = request.args.get("searchterm", default="")
+    entity = request.args.get("type", default="users")
+
+    return render_template('search.html', searchterm=search, type=entity)
+
+@app.route('/search/tweet')
+def search_tweets():
+    search = request.args.get("searchterm", default="")
+    return f"Searching for '{search}' in tweets works basically"
+
+@app.route('/search/user')
+def search_users():
+    begin = request.args.get("begin", default="1970-01-01")
+    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    search = request.args.get("searchterm", default="")
+
+    hits = [r['user'] for r in graph.run("""
+        CALL db.index.fulltext.queryNodes('users', { search }) YIELD node AS user, score
+        MATCH (user:User) -[:POSTS]-> (t:Tweet) <-[:REFERS_TO]- (r:Tweet)
+        WHERE t.created_at >= datetime({ begin }) AND t.created_at <= datetime({ end })
+        RETURN user, count(r) AS i
+        ORDER BY i DESCENDING
+        LIMIT 1000
+        """, search=search, begin=begin, end=end)]
+
+    return render_template('users_list.html', users=hits, search=search)   
+
 
 def start(settings):
     global graph

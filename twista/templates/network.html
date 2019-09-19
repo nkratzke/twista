@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="mdl-grid">
+    <div class="mdl-cell mdl-cell--12-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Retweeting network @{{ user['screen_name'] }}</h2>
+            </div>
+            <div id="network"></div>
+            <script>
+                var cy = cytoscape({
+                    container: document.getElementById('network'),
+                    layout: {
+                        name: 'cose',
+                        idealEdgeLength: 100,
+                        nodeOverlap: 20,
+                        refresh: 20,
+                        fit: true,
+                        padding: 30,
+                        randomize: false,
+                        componentSpacing: 100,
+                        nodeRepulsion: 400000,
+                        edgeElasticity: 100,
+                        nestingFactor: 5,
+                        gravity: 80,
+                        numIter: 1000,
+                        initialTemp: 200,
+                        coolingFactor: 0.95,
+                        minTemp: 1.0
+                    },
+                    style: [
+                        {
+                            selector: 'node',
+                            style: {
+                                'content': 'data(screen_name)',
+                                'background-color': '#AAAAAA',
+                                'width': 10,
+                                'height': 10
+                            }
+                        },
+                        {
+                            selector: 'node[[outdegree > 5]]',
+                            style: {
+                                'width': 15,
+                                'height': 15,
+                            }
+                        },
+                        {
+                            selector: 'node[[outdegree > 10]]',
+                            style: {
+                                'width': 20,
+                                'height': 20
+                            }
+                        },
+                        {
+                            selector: 'node[[outdegree > 20]]',
+                            style: {
+                                'width': 40,
+                                'height': 40
+                            }
+                        },
+                        {
+                            selector: 'edge',
+                            style: {
+                                'width': 'data(qty)',
+                                'line-color': '#CCCCCC'
+                            }
+                        }
+                    ],
+
+                    elements: {{ elements | safe }}
+                });
+                //cy.on('drag', 'node', ev => layout.run());
+            </script>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
