@@ -18,6 +18,8 @@
                         nodeOverlap: 20,
                         refresh: 20,
                         fit: true,
+                        animate: true,
+                        animationDuration: 5000,
                         padding: 30,
                         randomize: false,
                         componentSpacing: 100,
@@ -25,7 +27,7 @@
                         edgeElasticity: 100,
                         nestingFactor: 5,
                         gravity: 80,
-                        numIter: 1000,
+                        numIter: 5000,
                         initialTemp: 200,
                         coolingFactor: 0.95,
                         minTemp: 1.0
@@ -65,7 +67,10 @@
                             selector: 'edge',
                             style: {
                                 'width': 'data(qty)',
-                                'line-color': '#CCCCCC'
+                                'line-color': '#CCCCCC',
+                                'targetArrowShape': 'ARROW',
+                                'targetArrowColor': '#CCCCCC', 
+                                'opacity': 0.5
                             }
                         }
                     ],

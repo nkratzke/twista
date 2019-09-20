@@ -419,33 +419,31 @@ def user_network(id):
 
     user = graph.run("MATCH (u:User{id: {id}}) RETURN u", id=id).evaluate()
 
-    retweeters = [(r['u'], r['rt'], r['n']) for r in graph.run("""
-        MATCH (u:User{id: {id}}) -[:POSTS]-> (:Tweet) <-[:REFERS_TO]- (t:Tweet{type: 'retweet'}) <-[:POSTS]- (rt:User)
-        WHERE t.created_at >= datetime({ begin }) AND t.created_at <= datetime({ end })
-        RETURN u, rt, count(rt) AS n
-        ORDER BY n DESCENDING
-        LIMIT 25
-        """, id=id, begin=begin, end=end)]
-    
-    followups = [(r['u'], r['rt'], r['n']) for r in graph.run("""
-        UNWIND {uids} AS uid
-        MATCH (u:User{id: uid}) -[:POSTS]-> (:Tweet) <-[:REFERS_TO]- (t:Tweet{type: 'retweet'}) <-[:POSTS]- (rt:User)
-        WHERE t.created_at >= datetime({ begin }) AND t.created_at <= datetime({ end })
-        RETURN u, rt, count(rt) AS n
-        ORDER BY n DESCENDING
-        LIMIT 50
-        """, uids=[r['id'] for u, r, n in retweeters], begin=begin, end=end)]
+    process = set([user['id']])
+    scanned = set()
 
-    retweeters.extend(followups)
+    retweeters = []
+    for n in [50, 100, 200]:
+        retweeters.extend([(r['u'], r['rt'], r['n']) for r in graph.run("""
+            UNWIND {uids} AS uid
+            MATCH (u:User{id: uid}) -[:POSTS]-> (:Tweet) <-[:REFERS_TO]- (t:Tweet{type: 'retweet'}) <-[:POSTS]- (rt:User)
+            WHERE t.created_at >= datetime({ begin }) AND t.created_at <= datetime({ end })
+            RETURN u, rt, count(rt) AS n
+            ORDER BY n DESCENDING
+            LIMIT { n }
+            """, uids=list(process), begin=begin, end=end, n=n)])
+        new = set([r['id'] for u, r, _ in retweeters])
+        process = new - scanned
+        scanned = scanned.union(new)
 
     nodes = [u for u, _, _ in retweeters]
     nodes.extend([rt for _, rt, _ in retweeters])
     network = { 
         'nodes': [{ 'data': { 'id': u['id'], 'screen_name': u['screen_name'] }} for u in set(nodes)], 
-        'edges': [{ 'data': { 'source': u['id'], 'target': rt['id'], 'qty': n }} for u, rt, n in retweeters] 
+        'edges': [{ 'data': { 'source': u['id'], 'target': rt['id'], 'directed': True, 'qty': max(1, min(n // 2, 30)) }} for u, rt, n in retweeters] 
     }
 
-    return render_template('network.html', user=user, elements=network)
+    return render_template('network.html', user=user, elements=json.dumps(network))
 
 @app.route('/tweets/volume')
 def tweets_volume():
