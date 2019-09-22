@@ -419,15 +419,16 @@ def user_network(id):
 
     user = graph.run("MATCH (u:User{id: {id}}) RETURN u", id=id).evaluate()
 
-    process = set([user['id']])
+    start = set([user['id']])
+    process = start.copy()
     scanned = set()
 
     retweeters = []
-    for n in [50, 100, 200]:
+    for n in [50, 75, 100, 125]:
         retweeters.extend([(r['u'], r['rt'], r['n']) for r in graph.run("""
             UNWIND {uids} AS uid
             MATCH (u:User{id: uid}) -[:POSTS]-> (:Tweet) <-[:REFERS_TO]- (t:Tweet{type: 'retweet'}) <-[:POSTS]- (rt:User)
-            WHERE t.created_at >= datetime({ begin }) AND t.created_at <= datetime({ end })
+            WHERE t.created_at >= datetime({ begin }) AND t.created_at <= datetime({ end }) AND u <> rt
             RETURN u, rt, count(rt) AS n
             ORDER BY n DESCENDING
             LIMIT { n }
@@ -438,9 +439,10 @@ def user_network(id):
 
     nodes = [u for u, _, _ in retweeters]
     nodes.extend([rt for _, rt, _ in retweeters])
+    mark = lambda n: 'start' if (n['id'] in start) else 'follow'
     network = { 
-        'nodes': [{ 'data': { 'id': u['id'], 'screen_name': u['screen_name'] }} for u in set(nodes)], 
-        'edges': [{ 'data': { 'source': u['id'], 'target': rt['id'], 'directed': True, 'qty': max(1, min(n // 2, 30)) }} for u, rt, n in retweeters] 
+        'nodes': [{ 'data': { 'id': u['id'], 'screen_name': u['screen_name'], 'select': mark(u) }} for u in set(nodes)], 
+        'edges': [{ 'data': { 'source': u['id'], 'target': rt['id'], 'directed': True, 'qty': max(1, min(n // 2, 20)) }} for u, rt, n in retweeters] 
     }
 
     return render_template('network.html', user=user, elements=json.dumps(network))

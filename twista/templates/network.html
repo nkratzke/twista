@@ -10,57 +10,60 @@
             </div>
             <div id="network"></div>
             <script>
+                var highlight = '#FF4081';
                 var cy = cytoscape({
                     container: document.getElementById('network'),
                     layout: {
                         name: 'cose',
-                        idealEdgeLength: 100,
-                        nodeOverlap: 20,
-                        refresh: 20,
-                        fit: true,
                         animate: true,
-                        animationDuration: 5000,
-                        padding: 30,
-                        randomize: false,
-                        componentSpacing: 100,
-                        nodeRepulsion: 400000,
-                        edgeElasticity: 100,
-                        nestingFactor: 5,
-                        gravity: 80,
-                        numIter: 5000,
-                        initialTemp: 200,
-                        coolingFactor: 0.95,
-                        minTemp: 1.0
+                        randomize: true,
+                        fit: true,
+                        edgeElasticity: edge => edge.data('qty') * 32,
+                        nodeRepulsion: node => node.degree() * 2048,
                     },
                     style: [
                         {
                             selector: 'node',
                             style: {
-                                'content': 'data(screen_name)',
                                 'background-color': '#AAAAAA',
-                                'width': 10,
-                                'height': 10
+                                'width': 5,
+                                'height': 5
+                            }
+                        },
+                        {
+                            selector: 'node:grabbed',
+                            style: {
+                                'content': 'data(screen_name)',
+                            }
+                        },
+                        {
+                            selector: 'node[select = "start"]',
+                            style: {
+                                'content': 'data(screen_name)',
+                                'color': highlight,
+                                'font-size': 24,
+                                'background-color': highlight,
                             }
                         },
                         {
                             selector: 'node[[outdegree > 5]]',
                             style: {
-                                'width': 15,
-                                'height': 15,
+                                'width': 10,
+                                'height': 10,
                             }
                         },
                         {
                             selector: 'node[[outdegree > 10]]',
                             style: {
-                                'width': 20,
-                                'height': 20
+                                'width': 15,
+                                'height': 15
                             }
                         },
                         {
                             selector: 'node[[outdegree > 20]]',
                             style: {
-                                'width': 40,
-                                'height': 40
+                                'width': 30,
+                                'height': 30
                             }
                         },
                         {
@@ -68,16 +71,45 @@
                             style: {
                                 'width': 'data(qty)',
                                 'line-color': '#CCCCCC',
-                                'targetArrowShape': 'ARROW',
-                                'targetArrowColor': '#CCCCCC', 
+                                'curve-style': 'bezier',
+                                'target-arrow-shape': 'triangle',
+                                'target-arrow-color': '#CCCCCC', 
                                 'opacity': 0.5
+                            }
+                        },
+                        {
+                            selector: 'node.outgoing,edge.outgoing',
+                            style: {
+                                'background-color': highlight,
+                                'line-color': highlight,
+                                'target-arrow-color': highlight
+                            }
+                        },
+                        {
+                            selector: 'node.incoming,edge.incoming',
+                            style: {
+                                'background-color': 'blue',
+                                'line-color': 'blue',
+                                'target-arrow-color': 'blue'
                             }
                         }
                     ],
 
                     elements: {{ elements | safe }}
                 });
-                //cy.on('drag', 'node', ev => layout.run());
+                cy.on('mouseover', 'node', ev => {
+                    ev.target.outgoers().forEach(e => e.toggleClass('outgoing'));
+                    cy.elements()
+                      .aStar({ root: "[select = 'start']", goal: ev.target, directed: true })
+                      .path.forEach(e => e.toggleClass('incoming'));
+                });
+                cy.on('mouseout', 'node', ev => {
+                    ev.target.outgoers().forEach(e => e.toggleClass('outgoing'));
+                    cy.elements()
+                      .aStar({ root: "[select = 'start']", goal: ev.target, directed: true })
+                      .path.forEach(e => e.toggleClass('incoming'));
+                });
+
             </script>
         </div>
     </div>
