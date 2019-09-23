@@ -3,7 +3,7 @@
 {% block content %}
 
 <div class="mdl-grid">
-    <div class="mdl-cell mdl-cell--12-col">
+    <div class="mdl-cell mdl-cell--8-col">
         <div class="mdl-card mdl-shadow--2dp">
             <div class="mdl-card__title">
                 <h2 class="mdl-card__title-text">Retweeting network @{{ user['screen_name'] }}</h2>
@@ -13,27 +13,13 @@
                 var highlight = '#FF4081';
                 var cy = cytoscape({
                     container: document.getElementById('network'),
-                    layout: {
-                        name: 'cose',
-                        animate: true,
-                        randomize: true,
-                        fit: true,
-                        edgeElasticity: edge => edge.data('qty') * 32,
-                        nodeRepulsion: node => node.degree() * 2048,
-                    },
+                    layout: { name: 'random' },
                     style: [
                         {
                             selector: 'node',
                             style: {
                                 'background-color': '#AAAAAA',
-                                'width': 5,
-                                'height': 5
-                            }
-                        },
-                        {
-                            selector: 'node:grabbed',
-                            style: {
-                                'content': 'data(screen_name)',
+                                'opacity': 0.5,
                             }
                         },
                         {
@@ -43,27 +29,13 @@
                                 'color': highlight,
                                 'font-size': 24,
                                 'background-color': highlight,
+                                'opacity': 1.0
                             }
                         },
                         {
-                            selector: 'node[[outdegree > 5]]',
+                            selector: 'node.current',
                             style: {
-                                'width': 10,
-                                'height': 10,
-                            }
-                        },
-                        {
-                            selector: 'node[[outdegree > 10]]',
-                            style: {
-                                'width': 15,
-                                'height': 15
-                            }
-                        },
-                        {
-                            selector: 'node[[outdegree > 20]]',
-                            style: {
-                                'width': 30,
-                                'height': 30
+                                'content': 'data(screen_name)'
                             }
                         },
                         {
@@ -78,7 +50,7 @@
                             }
                         },
                         {
-                            selector: 'node.outgoing,edge.outgoing',
+                            selector: '.outgoing',
                             style: {
                                 'background-color': highlight,
                                 'line-color': highlight,
@@ -86,7 +58,7 @@
                             }
                         },
                         {
-                            selector: 'node.incoming,edge.incoming',
+                            selector: '.incoming',
                             style: {
                                 'background-color': 'blue',
                                 'line-color': 'blue',
@@ -97,20 +69,53 @@
 
                     elements: {{ elements | safe }}
                 });
+                const maxSize = Math.max(...cy.elements('node').map(n => n.indegree(false) + 2 * n.outdegree(false)));
+                console.log(maxSize);
+                const maxQty = Math.max(...cy.elements('edge').map(e => e.data('qty')));
+                console.log(maxQty);
+                cy.elements('node').forEach(n => n.css({
+                    'width': 100 * (n.indegree(false) + 2 * n.outdegree(false)) / maxSize,
+                    'height': 100 * (n.indegree(false) + 2 * n.outdegree(false)) / maxSize
+                }));
+
+                cy.elements('edge').forEach(e => e.css({'width': Math.max(1, 15 * e.data('qty') / maxQty)}));
+
+                cy.layout({
+                    name: 'cose',
+                    animate: true,
+                    delayAnimation: 250,
+                    randomize: true,
+                    fit: true,
+                    edgeElasticity: edge => edge.data('qty') * 32,
+                    nodeRepulsion: node => node.degree() * 2048,
+                }).run()
+
                 cy.on('mouseover', 'node', ev => {
                     ev.target.outgoers().forEach(e => e.toggleClass('outgoing'));
+                    ev.target.toggleClass('current');
                     cy.elements()
                       .aStar({ root: "[select = 'start']", goal: ev.target, directed: true })
                       .path.forEach(e => e.toggleClass('incoming'));
+                    loadText("/user/" + ev.target.id() + "/info", { 
+                            'begin': localStorage.getItem('begin'), 
+                            'end': localStorage.getItem('end')
+                        }, 
+                        response => document.getElementById('current-user').innerHTML = response
+                    );
                 });
                 cy.on('mouseout', 'node', ev => {
                     ev.target.outgoers().forEach(e => e.toggleClass('outgoing'));
+                    ev.target.toggleClass('current');
                     cy.elements()
                       .aStar({ root: "[select = 'start']", goal: ev.target, directed: true })
                       .path.forEach(e => e.toggleClass('incoming'));
                 });
 
             </script>
+        </div>
+    </div>
+    <div class="mdl-cell mdl-cell--4-col">
+        <div id="current-user" class="mdl-card mdl-shadow--2dp">
         </div>
     </div>
 </div>
