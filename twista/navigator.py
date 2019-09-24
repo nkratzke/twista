@@ -370,8 +370,8 @@ def user_retweeters(id):
     end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
 
     result = " ".join([link(chip("@" + r['user']['screen_name'], data=r['n']), f"/user/{ r['user']['id'] }", classes=['filtered']) for r in graph.run("""
-        MATCH (u:User{id: {id}}) -[:POSTS]-> (t:Tweet) <-[:REFERS_TO]- (:Tweet) <-[:POSTS]- (user:User)
-        WHERE t.created_at >= datetime({begin}) AND t.created_at <= datetime({end})
+        MATCH (u:User{id: {id}}) -[:POSTS]-> (:Tweet) <-[:REFERS_TO]- (t:Tweet{type: 'retweet'}) <-[:POSTS]- (user:User)
+        WHERE t.created_at >= datetime({begin}) AND t.created_at <= datetime({end}) AND user <> u
         RETURN user, count(user) AS n
         ORDER BY n DESCENDING
         LIMIT 50
@@ -427,12 +427,12 @@ def user_network(id):
 
     user = graph.run("MATCH (u:User{id: {id}}) RETURN u", id=id).evaluate()
 
-    start = set([user['id']])
-    process = start.copy()
-    scanned = set()
+    new = set([user['id']])
+    process = new.copy()
+    scanned = new.copy()
 
     retweeters = []
-    for n in [50, 100, 200, 400]:
+    for n in [50, 50, 50, 50, 50]:
         retweeters.extend([(r['u'], r['rt'], r['n']) for r in graph.run("""
             UNWIND {uids} AS uid
             MATCH (u:User{id: uid}) -[:POSTS]-> (:Tweet) <-[:REFERS_TO]- (t:Tweet{type: 'retweet'}) <-[:POSTS]- (rt:User)
@@ -447,7 +447,7 @@ def user_network(id):
 
     nodes = [u for u, _, _ in retweeters]
     nodes.extend([rt for _, rt, _ in retweeters])
-    mark = lambda n: 'start' if (n['id'] in start) else 'follow'
+    mark = lambda n: 'start' if (n['id'] == user['id']) else 'follow'
     network = { 
         'nodes': [{ 'data': { 'id': u['id'], 'screen_name': u['screen_name'], 'select': mark(u) }} for u in set(nodes)], 
         'edges': [{ 'data': { 'source': u['id'], 'target': rt['id'], 'directed': True, 'qty': n }} for u, rt, n in retweeters] 
@@ -597,6 +597,22 @@ def search_users():
 
     return render_template('users_list.html', users=hits, search=search)   
 
+
+@app.route('/retweets/')
+def get_retweets():
+    begin = request.args.get("begin", default="1970-01-01")
+    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    sid = request.args.get("source")
+    tid = request.args.get("target")
+
+    result = [{ 'tweet': r['x'], 'user': r['u'] } for r in graph.run("""
+        MATCH (u:User{id: {sid}}) -[:POSTS]-> (x:Tweet) <-[:REFERS_TO]- (t:Tweet{type:'retweet'}) <-[:POSTS]- (v:User{id:{tid}})
+        WHERE t.created_at >= datetime({begin}) AND t.created_at <= datetime({end})
+        RETURN x, u
+        ORDER BY x.created_at
+    """, sid=sid, tid=tid, begin=begin, end=end)]
+
+    return render_template('tweet_list.html', tweets=result)
 
 def start(settings):
     global graph

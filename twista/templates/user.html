@@ -10,6 +10,10 @@
             </div>
             <div class="mdl-card__supporting-text">
                 {{ user['description'] | safe }}
+                <br>
+                <a href="/user/{{ user['id'] }}/network" class="filtered">
+                    <i class="material-icons">supervised_user_circle</i>
+                </a>
             </div>
             <div class="mdl-card__supporting-text">
                 {% if user['url'] %}

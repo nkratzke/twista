@@ -3,10 +3,12 @@
 {% block content %}
 
 <div class="mdl-grid">
-    <div class="mdl-cell mdl-cell--8-col">
+    <div class="mdl-cell mdl-cell--6-col">
         <div class="mdl-card mdl-shadow--2dp">
             <div class="mdl-card__title">
-                <h2 class="mdl-card__title-text">Retweeting network @{{ user['screen_name'] }}</h2>
+                <h2 class="mdl-card__title-text">Retweeting network&nbsp;
+                    <a href="/user/{{ user['id'] }}" class="filtered">@{{ user['screen_name'] }}</a>    
+                </h2>
             </div>
             <div id="network"></div>
             <script>
@@ -58,7 +60,7 @@
                             }
                         },
                         {
-                            selector: '.incoming',
+                            selector: '.incoming, .current',
                             style: {
                                 'background-color': 'blue',
                                 'line-color': 'blue',
@@ -70,15 +72,13 @@
                     elements: {{ elements | safe }}
                 });
                 const maxSize = Math.max(...cy.elements('node').map(n => n.indegree(false) + 2 * n.outdegree(false)));
-                console.log(maxSize);
                 const maxQty = Math.max(...cy.elements('edge').map(e => e.data('qty')));
-                console.log(maxQty);
                 cy.elements('node').forEach(n => n.css({
-                    'width': 100 * (n.indegree(false) + 2 * n.outdegree(false)) / maxSize,
-                    'height': 100 * (n.indegree(false) + 2 * n.outdegree(false)) / maxSize
+                    'width': 50 * (n.indegree(false) + 2 * n.outdegree(false)) / maxSize,
+                    'height': 50 * (n.indegree(false) + 2 * n.outdegree(false)) / maxSize
                 }));
 
-                cy.elements('edge').forEach(e => e.css({'width': Math.max(1, 15 * e.data('qty') / maxQty)}));
+                cy.elements('edge').forEach(e => e.css({'width': Math.max(1, 10 * e.data('qty') / maxQty)}));
 
                 cy.layout({
                     name: 'cose',
@@ -90,18 +90,25 @@
                     nodeRepulsion: node => node.degree() * 2048,
                 }).run()
 
+                cy.on('mouseover', 'edge', ev => ev.target.toggleClass('current'));
+                cy.on('mouseout', 'edge', ev => ev.target.toggleClass('current'));
+                cy.on('click', 'edge', ev => {
+                    loadText("/retweets/", {
+                            'source': ev.target.source().id(),
+                            'target': ev.target.target().id(), 
+                            'begin': localStorage.getItem('begin'), 
+                            'end': localStorage.getItem('end')
+                        }, 
+                        response => document.getElementById('current-user').innerHTML = response
+                    );
+                });
+
                 cy.on('mouseover', 'node', ev => {
                     ev.target.outgoers().forEach(e => e.toggleClass('outgoing'));
                     ev.target.toggleClass('current');
                     cy.elements()
                       .aStar({ root: "[select = 'start']", goal: ev.target, directed: true })
                       .path.forEach(e => e.toggleClass('incoming'));
-                    loadText("/user/" + ev.target.id() + "/info", { 
-                            'begin': localStorage.getItem('begin'), 
-                            'end': localStorage.getItem('end')
-                        }, 
-                        response => document.getElementById('current-user').innerHTML = response
-                    );
                 });
                 cy.on('mouseout', 'node', ev => {
                     ev.target.outgoers().forEach(e => e.toggleClass('outgoing'));
@@ -110,11 +117,18 @@
                       .aStar({ root: "[select = 'start']", goal: ev.target, directed: true })
                       .path.forEach(e => e.toggleClass('incoming'));
                 });
-
+                cy.on('click', 'node', ev => {
+                    loadText("/user/" + ev.target.id() + "/info", { 
+                            'begin': localStorage.getItem('begin'), 
+                            'end': localStorage.getItem('end')
+                        }, 
+                        response => document.getElementById('current-user').innerHTML = response
+                    );
+                });
             </script>
         </div>
     </div>
-    <div class="mdl-cell mdl-cell--4-col">
+    <div class="mdl-cell mdl-cell--6-col">
         <div id="current-user" class="mdl-card mdl-shadow--2dp">
         </div>
     </div>

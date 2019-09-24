@@ -1,5 +1,7 @@
 <div class="mdl-card__title">
-    <h2 class="mdl-card__title-text">User @{{ user['screen_name'] }}</h2>
+    <h2 class="mdl-card__title-text">User&nbsp;
+        <a href="/user/{{ user['id'] }}" class="filtered">@{{ user['screen_name'] }}</a>
+    </h2>
 </div>
 <div class="mdl-card__supporting-text">
     {{ user['description'] | safe }}
