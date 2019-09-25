@@ -5,7 +5,7 @@ from datetime import datetime as dt
 from datetime import timedelta
 import json
 import os
-from dateutil import parser
+from dateutil import parser, relativedelta
 import random as rand
 import string
 
@@ -613,6 +613,24 @@ def get_retweets():
     """, sid=sid, tid=tid, begin=begin, end=end)]
 
     return render_template('tweet_list.html', tweets=result)
+
+@app.route('/stats/postings')
+def stats_for_postings():
+    begin = request.args.get("begin", default="1970-01-01")
+    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+
+    N = 10000
+    result = [(r['duration'], r['n']) for r in graph.run("""
+        MATCH (u:User) -[:POSTS]-> (t:Tweet)
+        WHERE t.created_at >= datetime({begin}) AND 
+              t.created_at <= datetime({end})
+        RETURN duration.inDays(datetime({begin}), datetime({end})) AS duration, count(t) AS n
+        LIMIT { N }
+        """, begin=begin, end=end, N=N)]
+
+    r = Counter([d.days // n for d, n in result])
+    return jsonify({ f: n / N * 100 for f, n in r.items() })
+    
 
 def start(settings):
     global graph
