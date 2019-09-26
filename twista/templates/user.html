@@ -3,126 +3,151 @@
 {% block content %}
 
 <div class="mdl-grid">
-    <div class="mdl-cell mdl-cell--4-col">
+    <div class="mdl-cell mdl-cell--3-col">
         <div class="mdl-card mdl-shadow--2dp">
             <div class="mdl-card__title">
-                <h2 class="mdl-card__title-text">User @{{ user['screen_name'] }}</h2>
+                <h2 class="mdl-card__title-text">User @{{ user['screen_name'] }}
+                    {% if user['url'] %}
+                    <a class="web" href="{{ user['url'] }}">
+                        <i class="material-icons">link</i>
+                    </a>
+                    {% endif %}
+                </h2>
             </div>
             <div class="mdl-card__supporting-text">
                 {{ user['description'] | safe }}
-                <br>
-                <a href="/user/{{ user['id'] }}/network" class="filtered">
-                    <i class="material-icons">supervised_user_circle</i>
-                </a>
             </div>
             <div class="mdl-card__supporting-text">
-                {% if user['url'] %}
-                <a class="web" href="{{ user['url'] }}">Link</a><br>
-                {% endif %}
                 Since: <span class="created">{{ user['created_at'] }}</span><br>
                 Location: <span class="location">{{ user['location'] }}</span><br>
                 Follower: <span class="follower">{{ user['friends'] }}</span><br>
                 Listed: <span class="listed">{{ user['listed'] }}</span><br>
                 Posts: <span class="posts">{{ user['statuses'] }}</span>
             </div>
-        </div>
-    </div>
-
-    <div class="mdl-cell mdl-cell--4-col">
-        <div class="mdl-card mdl-shadow--2dp">
-            <div class="mdl-card__title">
-                <h2 class="mdl-card__title-text">Retweeting network</h2>
-            </div>
-            <div id='retweeters' class="mdl-card__supporting-text">
-                <div class="mdl-spinner mdl-js-spinner is-active"></div>
-                <script>
-                    loadText("/user/{{ user['id'] }}/retweeters", { 
-                            'begin': localStorage.getItem('begin'), 
-                            'end': localStorage.getItem('end')
-                        }, 
-                        response => document.getElementById('retweeters').innerHTML = response
-                    );
-                </script>
-            </div>
-        </div>
-    </div>
-
-    <div class="mdl-cell mdl-cell--4-col">
-        <div class="mdl-card mdl-shadow--2dp">
-            <div class="mdl-card__title">
-                <h2 class="mdl-card__title-text">Associated tags</h2>
-            </div>
-            <div id='tags' class="mdl-card__supporting-text">
-                <div class="mdl-spinner mdl-js-spinner is-active"></div>
-                <script>
-                    loadText("/user/{{ user['id'] }}/tags", { 
-                            'begin': localStorage.getItem('begin'), 
-                            'end': localStorage.getItem('end')
-                        }, 
-                        response => document.getElementById('tags').innerHTML = response
-                    );
-                </script>
-            </div>
-        </div>
-    </div>
-
-    <div class="mdl-cell mdl-cell--8-col">
-        <div class="mdl-card mdl-shadow--2dp">
-            <div class="mdl-card__title">
-                <h2 class="mdl-card__title-text">Posting activity</h2>
-            </div>
-            <div id='activity' class="mdl-card__supporting-text">
-                <div class="mdl-spinner mdl-js-spinner is-active"></div>
-                <script>
-                    loadJson("/user/{{ user['id'] }}/activity", { 
-                            'begin': localStorage.getItem('begin'), 
-                            'end': localStorage.getItem('end')
-                        }, 
-                        data => plot(document.getElementById('activity'), data)
-                    );
-                </script>
+            <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
+                <div class="mdl-tabs__tab-bar">
+                    <a href="#behaviour" class="mdl-tabs__tab is-active">Behaviour</a>
+                    <a href="#tags" class="mdl-tabs__tab">#Tags</a>
+                    <a href="#retweeters" class="mdl-tabs__tab">Retweeters</a>
+                    <a href="#quoters" class="mdl-tabs__tab">Quoters</a>
+                </div>
+                <div id='behaviour' class="mdl-tabs__panel is-active">
+                    <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                    <script>
+                        loadJson("/user/{{ user['id'] }}/behaviour", { 
+                                'begin': localStorage.getItem('begin'), 
+                                'end': localStorage.getItem('end')
+                            }, 
+                            data => plot(document.getElementById('behaviour'), data)
+                        );
+                    </script>
+                </div>
+                <div id='tags' class="mdl-tabs__panel mdl-card__supporting-text">
+                    <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                    <script>
+                        loadText("/user/{{ user['id'] }}/tags", { 
+                                'begin': localStorage.getItem('begin'), 
+                                'end': localStorage.getItem('end')
+                            }, 
+                            response => document.getElementById('tags').innerHTML = response
+                        );
+                    </script>
+                </div>
+                <div id='retweeters' class="mdl-tabs__panel mdl-card__supporting-text">
+                    <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                    <script>
+                        loadText("/user/{{ user['id'] }}/interactors", {
+                                'type': 'retweet',
+                                'begin': localStorage.getItem('begin'), 
+                                'end': localStorage.getItem('end')
+                            }, 
+                            response => document.getElementById('retweeters').innerHTML = response
+                        );
+                    </script>
+                </div>
+                <div id='quoters' class="mdl-tabs__panel mdl-card__supporting-text">
+                    <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                    <script>
+                        loadText("/user/{{ user['id'] }}/interactors", {
+                                'type': 'quote',
+                                'begin': localStorage.getItem('begin'), 
+                                'end': localStorage.getItem('end')
+                            }, 
+                            response => document.getElementById('quoters').innerHTML = response
+                        );
+                    </script>
+                </div>               
             </div>
         </div>
     </div>
 
-    <div class="mdl-cell mdl-cell--4-col">
+    <div class="mdl-cell mdl-cell--9-col">
         <div class="mdl-card mdl-shadow--2dp">
             <div class="mdl-card__title">
-                <h2 class="mdl-card__title-text">Posting behaviour</h2>
+                <h2 class="mdl-card__title-text">Insights</h2>
             </div>
-            <div id='behaviour' class="mdl-card__supporting-text">
-                <div class="mdl-spinner mdl-js-spinner is-active"></div>
-                <script>
-                    loadJson("/user/{{ user['id'] }}/behaviour", { 
-                            'begin': localStorage.getItem('begin'), 
-                            'end': localStorage.getItem('end')
-                        }, 
-                        data => plot(document.getElementById('behaviour'), data)
-                    );
-                </script>
+            <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
+                <div class="mdl-tabs__tab-bar">
+                    <a href="#activity" class="mdl-tabs__tab is-active">Posting activity</a>
+                    <a href="#network" class="mdl-tabs__tab">Retweeting network</a>
+                </div>
+                <div class="mdl-tabs__panel is-active" id="activity">
+                    <div class="mdl-grid">
+                        <div class="mdl-cell mdl-cell--7-col">                    
+                            <div id="activity-plot">
+                                <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                            </div>
+                        </div>
+                        <div class="mdl-cell mdl-cell--5-col">
+                            <div id="activity-inspector" class="inspector"></div>
+                        </div>
+                    </div>
+                    <script>
+                        loadJson("/user/{{ user['id'] }}/activity", { 
+                                'begin': localStorage.getItem('begin'), 
+                                'end': localStorage.getItem('end')
+                            }, 
+                            data => { 
+                                plot(document.querySelector('#activity-plot'), data);
+                                document.querySelector('#activity-plot > .js-plotly-plot').on('plotly_click', ev => {
+                                    loadText("/user/{{ user['id'] }}/contents", { 'of': ev['points'][0]['x'] }, response => {
+                                        document.querySelector('#activity-inspector').innerHTML = "<strong>User content</strong>" + response;
+                                        refreshFilter();
+                                    });                                    ;
+                                });
+                            }
+                        );
+                    </script>
+                </div>
+                <div class="mdl-tabs__panel" id="network">
+                    <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                    <div class="mdl-grid">
+                        <div class="mdl-cell mdl-cell--7-col">                    
+                            <div id="retweet-network"></div>
+                        </div>
+                        <div class="mdl-cell mdl-cell--5-col">
+                            <div id="network-inspector" class="inspector"></div>
+                        </div>
+                    </div>
+                    <script>
+                        loadJson("/user/{{ user['id'] }}/network", { 
+                                'begin': localStorage.getItem('begin'), 
+                                'end': localStorage.getItem('end')
+                            }, 
+                            network => {
+                                plotRetweetNetwork(
+                                    network, 
+                                    document.querySelector('#retweet-network'),
+                                    document.querySelector('#network-inspector')
+                                );
+                                document.querySelector('#network .mdl-spinner').remove();
+                            }
+                        );
+                    </script>
+                </div>
             </div>
         </div>
-    </div>
-
-    <div class="mdl-cell mdl-cell--8-col">
-        <div class="mdl-card mdl-shadow--2dp">
-            <div class="mdl-card__title">
-                <h2 class="mdl-card__title-text">Tweets with maximum impact</h2>
-            </div>
-            <div id='tweetlist' class="mdl-card__supporting-text">
-                <div class="mdl-spinner mdl-js-spinner is-active"></div>
-                <script>
-                    loadText("/user/{{ user['id'] }}/tweets", { 
-                            'begin': localStorage.getItem('begin'), 
-                            'end': localStorage.getItem('end')
-                        }, 
-                        response => document.getElementById('tweetlist').innerHTML = response
-                    );
-                </script>
-            </div>
-        </div>
-    </div>
-    
+    </div>    
 </div>
 
 {% endblock %}

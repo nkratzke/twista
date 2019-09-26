@@ -364,18 +364,19 @@ def user_activity(id):
         'type': 'scatter'
     }])
 
-@app.route('/user/<id>/retweeters')
-def user_retweeters(id):
+@app.route('/user/<id>/interactors')
+def user_interactors(id):
     begin = request.args.get("begin", default="1970-01-01")
     end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    action = request.args.get("type", default="retweet")
 
     result = " ".join([link(chip("@" + r['user']['screen_name'], data=r['n']), f"/user/{ r['user']['id'] }", classes=['filtered']) for r in graph.run("""
-        MATCH (u:User{id: {id}}) -[:POSTS]-> (:Tweet) <-[:REFERS_TO]- (t:Tweet{type: 'retweet'}) <-[:POSTS]- (user:User)
+        MATCH (u:User{id: {id}}) -[:POSTS]-> (:Tweet) <-[:REFERS_TO]- (t:Tweet{type: {action}}) <-[:POSTS]- (user:User)
         WHERE t.created_at >= datetime({begin}) AND t.created_at <= datetime({end}) AND user <> u
         RETURN user, count(user) AS n
         ORDER BY n DESCENDING
         LIMIT 50
-        """, id=id, begin=begin, end=end)])
+        """, id=id, begin=begin, end=end, action=action)])
 
     return result
 
@@ -384,7 +385,7 @@ def user_tags(id):
     begin = request.args.get("begin", default="1970-01-01")
     end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
 
-    result = "".join([link(chip("#" + r['tag'], data=r['n']), f"/tag/{ r['tag'] }", classes=['filtered']) for r in graph.run("""
+    result = " ".join([link(chip("#" + r['tag'], data=r['n']), f"/tag/{ r['tag'] }", classes=['filtered']) for r in graph.run("""
         MATCH (u:User{id: {id}}) -[:POSTS]-> (t:Tweet) -[:HAS_TAG]-> (tag:Tag)
         WHERE t.created_at >= datetime({begin}) AND t.created_at <= datetime({end})
         RETURN tag.id AS tag, count(tag) AS n
@@ -394,20 +395,18 @@ def user_tags(id):
 
     return result
 
-@app.route('/user/<id>/tweets')
-def user_tweets(id):
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+@app.route('/user/<id>/contents')
+def user_posts(id):
+    of = request.args.get("of")
 
     tweets = [{ 'tweet': r['t'], 'user': r['u'] } for r in graph.run("""
-        MATCH (u:User{id: {id}}) -[:POSTS]-> (t:Tweet) <-[:REFERS_TO*]- (r:Tweet)
-        WHERE t.type <> 'retweet' AND 
-              t.created_at >= datetime({begin}) AND 
-              t.created_at <= datetime({end})
-        RETURN t, u, count(r) AS n
+        MATCH (u:User{id: {id}}) -[:POSTS]-> (t:Tweet)
+        WHERE date(t.created_at) = date({of})
+        RETURN t, u, t.favourites AS n
         ORDER BY n DESCENDING
-        LIMIT 50
-        """, id=id, begin=begin, end=end)]
+        """, id=id, of=of)]
+
+    print(tweets)
 
     return tweetlist(tweets)
 
@@ -453,7 +452,8 @@ def user_network(id):
         'edges': [{ 'data': { 'source': u['id'], 'target': rt['id'], 'directed': True, 'qty': n }} for u, rt, n in retweeters] 
     }
 
-    return render_template('network.html', user=user, elements=json.dumps(network))
+    return jsonify(network)
+    # return render_template('network.js', user=user, elements=json.dumps(network))
 
 @app.route('/tweets/volume')
 def tweets_volume():
