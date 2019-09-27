@@ -432,7 +432,7 @@ def user_network(id):
     scanned = new.copy()
 
     retweeters = []
-    for n in [50, 50, 50, 50, 50]:
+    for n in [25, 50, 100, 200]:
         retweeters.extend([(r['u'], r['rt'], r['n']) for r in graph.run("""
             UNWIND {uids} AS uid
             MATCH (u:User{id: uid}) -[:POSTS]-> (:Tweet) <-[:REFERS_TO]- (t:Tweet{type: 'retweet'}) <-[:POSTS]- (rt:User)
