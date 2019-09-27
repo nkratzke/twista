@@ -60,9 +60,9 @@ function refreshFilter() {
 
 function plotRetweetNetwork(network, container, inspect) {
     console.log("plotting into " + container);
-    var base_color = 'lightgrey';
-    var highlight_outgoing = 'black';
-    var highlight_incoming = 'fuchsia';
+    var base_color = '#66CCFF';
+    var highlight_outgoing = '#FF4081';
+    var highlight_incoming = 'orange';
     var cy = cytoscape({
         container: container,
         layout: { name: 'random' },
@@ -116,6 +116,13 @@ function plotRetweetNetwork(network, container, inspect) {
                     'background-color': highlight_incoming,
                     'line-color': highlight_incoming,
                     'target-arrow-color': highlight_incoming
+                }
+            },
+            {
+                select: 'edge.incoming',
+                style: {
+                    'width': 100,
+                    'opacity': 1.0
                 }
             }
         ],

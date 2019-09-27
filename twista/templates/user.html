@@ -3,7 +3,7 @@
 {% block content %}
 
 <div class="mdl-grid">
-    <div class="mdl-cell mdl-cell--3-col">
+    <div class="mdl-cell mdl-cell--4-col">
         <div class="mdl-card mdl-shadow--2dp">
             <div class="mdl-card__title">
                 <h2 class="mdl-card__title-text">User @{{ user['screen_name'] }}
@@ -107,7 +107,7 @@
         </div>
     </div>
 
-    <div class="mdl-cell mdl-cell--9-col">
+    <div class="mdl-cell mdl-cell--8-col">
         <div class="mdl-card mdl-shadow--2dp">
             <div class="mdl-card__title">
                 <h2 class="mdl-card__title-text">Insights</h2>
@@ -119,12 +119,12 @@
                 </div>
                 <div class="mdl-tabs__panel is-active" id="activity">
                     <div class="mdl-grid">
-                        <div class="mdl-cell mdl-cell--7-col">                    
+                        <div class="mdl-cell mdl-cell--6-col">                    
                             <div id="activity-plot">
                                 <div class="mdl-spinner mdl-js-spinner is-active"></div>
                             </div>
                         </div>
-                        <div class="mdl-cell mdl-cell--5-col">
+                        <div class="mdl-cell mdl-cell--6-col">
                             <div id="activity-inspector" class="inspector"></div>
                         </div>
                     </div>
@@ -148,10 +148,10 @@
                 <div class="mdl-tabs__panel" id="network">
                     <div class="mdl-spinner mdl-js-spinner is-active"></div>
                     <div class="mdl-grid">
-                        <div class="mdl-cell mdl-cell--7-col">                    
+                        <div class="mdl-cell mdl-cell--6-col">                    
                             <div id="retweet-network"></div>
                         </div>
-                        <div class="mdl-cell mdl-cell--5-col">
+                        <div class="mdl-cell mdl-cell--6-col">
                             <div id="network-inspector" class="inspector"></div>
                         </div>
                     </div>
