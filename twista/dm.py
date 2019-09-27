@@ -154,11 +154,15 @@ class User(TweetObject):
     def screenname(self):
         return self.json['screen_name']
     
+    def name(self):
+        return self.json['name']
+
     def as_dict(self):
         return {
             'twista': twista.VERSION,
             'type': 'user',
             'id': self.id(),
+            'name': self.name(), # Since Version 0.3.1b
             'screen_name': self.screenname(),
             'created_at': self.created_at(),
             'recorded_at': self.recorded_at(),

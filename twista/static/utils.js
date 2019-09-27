@@ -60,7 +60,9 @@ function refreshFilter() {
 
 function plotRetweetNetwork(network, container, inspect) {
     console.log("plotting into " + container);
-    var highlight = '#FF4081';
+    var base_color = 'lightgrey';
+    var highlight_outgoing = 'black';
+    var highlight_incoming = 'fuchsia';
     var cy = cytoscape({
         container: container,
         layout: { name: 'random' },
@@ -68,7 +70,7 @@ function plotRetweetNetwork(network, container, inspect) {
             {
                 selector: 'node',
                 style: {
-                    'background-color': '#AAAAAA',
+                    'background-color': base_color,
                     'opacity': 0.5,
                 }
             },
@@ -76,43 +78,44 @@ function plotRetweetNetwork(network, container, inspect) {
                 selector: 'node[select = "start"]',
                 style: {
                     'content': 'data(screen_name)',
-                    'color': highlight,
+                    'color': highlight_outgoing,
                     'font-size': 24,
-                    'background-color': highlight,
+                    'background-color': highlight_outgoing,
                     'opacity': 1.0
                 }
             },
             {
                 selector: 'node.current',
                 style: {
-                    'content': 'data(screen_name)'
+                    'content': 'data(screen_name)',
+                    'color': highlight_incoming
                 }
             },
             {
                 selector: 'edge',
                 style: {
                     'width': 'data(qty)',
-                    'line-color': '#CCCCCC',
+                    'line-color': base_color,
                     'curve-style': 'bezier',
                     'target-arrow-shape': 'triangle',
-                    'target-arrow-color': '#CCCCCC', 
+                    'target-arrow-color': base_color, 
                     'opacity': 0.5
                 }
             },
             {
                 selector: '.outgoing',
                 style: {
-                    'background-color': highlight,
-                    'line-color': highlight,
-                    'target-arrow-color': highlight
+                    'background-color': highlight_outgoing,
+                    'line-color': highlight_outgoing,
+                    'target-arrow-color': highlight_outgoing
                 }
             },
             {
                 selector: '.incoming, .current',
                 style: {
-                    'background-color': 'blue',
-                    'line-color': 'blue',
-                    'target-arrow-color': 'blue'
+                    'background-color': highlight_incoming,
+                    'line-color': highlight_incoming,
+                    'target-arrow-color': highlight_incoming
                 }
             }
         ],

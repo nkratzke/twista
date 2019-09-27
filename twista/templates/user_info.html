@@ -4,15 +4,38 @@
     </h2>
 </div>
 <div class="mdl-card__supporting-text">
-    {{ user['description'] | safe }}
-</div>
-<div class="mdl-card__supporting-text">
-    {% if user['url'] %}
-    <a class="web" href="{{ user['url'] }}">Link</a><br>
-    {% endif %}
-    Since: <span class="created">{{ user['created_at'] }}</span><br>
-    Location: <span class="location">{{ user['location'] }}</span><br>
-    Follower: <span class="follower">{{ user['friends'] }}</span><br>
-    Listed: <span class="listed">{{ user['listed'] }}</span><br>
-    Posts: <span class="posts">{{ user['statuses'] }}</span>
+    <table class="user">
+        <tr>
+            <td>Name:</td>
+            <td>{{ user['name'] | safe }}</td>
+        </tr>
+        <tr>
+            <td>Description:</td>
+            <td>{{ user['description'] | safe }}</td>
+        </tr>
+        <tr>   
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td>Posts:</td>
+            <td>{{ user['statuses'] }}</td>
+        </tr>
+        <tr>
+            <td>Since:</td>
+            <td>{{ user['created_at'] | datetime }}</td>
+        </tr>
+        <tr>
+            <td>Location:</td>
+            <td>{{ user['location'] }}</td>
+        </tr>
+        <tr>
+            <td>Follower:</td>
+            <td>{{ user['friends'] }}</td>
+        </tr>
+        <tr>
+            <td>Listed:</td>
+            <td>{{ user['listed'] }}</td>
+        </tr>
+    </table>
 </div>

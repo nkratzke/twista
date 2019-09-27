@@ -92,6 +92,16 @@ table thead th {
     vertical-align: middle;
 }
 
+table.user tr, table.user td {
+    padding: 0.0em;
+    vertical-align: top;
+}
+
+table.user tr td:first-child {
+    font-weight: bold;
+    padding-right: 1em;
+}
+
 table tr, table td {
     padding: 0.75em;
 }

@@ -4,8 +4,8 @@ Found {{ users | length }} users for searchstring '{{ search }}'.
         {% for u in users %}
         <tr>
             <td>{{ ("@" + u['screen_name']) | chip | link("/user/" + u['id'], classes=["filtered"]) | safe }}</td>
+            <td>{{ u['name'] | safe }}</td>
             <td>{{ u['description'] | safe }}</td>
-            <td>{{ "<i class='material-icons'>supervised_user_circle</i>" | link("/user/" + u['id'] + "/network", classes=["filtered"]) | safe }} </td>
         </tr>
         {% endfor %}
     </tbody>

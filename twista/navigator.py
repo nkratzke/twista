@@ -51,21 +51,27 @@ def link(content, url, classes=[]):
 def datetime(dt):
     return parser.parse(str(dt)).strftime("%Y-%m-%d %H:%M:%S")
 
+def filter(args):
+    begin = args.get("begin", default="1970-01-01")
+    end = args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    if begin == "null":
+        begin = "1970-01-01"
+    if end == "null":
+        end = dt.now().strftime("%Y-%m-%d")
+    return (begin, end)
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
 @app.route('/tag/<id>')
 def tag(id):
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
-    
+    (begin, end) = filter(request.args)    
     return render_template('tag.html', tag=id)
 
 @app.route('/tag/<id>/activity')
 def tag_activity(id):
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    (begin, end) = filter(request.args)    
 
     volume = [(r['date'], r['n']) for r in graph.run("""
         MATCH (tag:Tag) <-[:HAS_TAG]- (t:Tweet)
@@ -100,8 +106,7 @@ def tag_activity(id):
 
 @app.route('/tag/<id>/behaviour')
 def tag_behaviour(id):
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    (begin, end) = filter(request.args)    
 
     volume = [(r['type'], r['n']) for r in graph.run("""
         MATCH (tag:Tag) <-[:HAS_TAG]- (t:Tweet)
@@ -121,8 +126,7 @@ def tag_behaviour(id):
 
 @app.route('/tag/<id>/tags')
 def tag_correlated_tags(id):
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    (begin, end) = filter(request.args)    
 
     tags = [(r['tag'], r['n']) for r in graph.run("""
         MATCH (tag:Tag) <-[:HAS_TAG]- (t:Tweet) -[:HAS_TAG]-> (other:Tag)
@@ -141,8 +145,7 @@ def tag_correlated_tags(id):
 
 @app.route('/tag/<id>/mentioned_users')
 def tag_correlated_users(id):
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    (begin, end) = filter(request.args)    
 
     users = [(r['user'], r['n']) for r in graph.run("""
         MATCH (tag:Tag) <-[:HAS_TAG]- (t:Tweet) -[m:MENTIONS]-> (u:User)
@@ -160,8 +163,7 @@ def tag_correlated_users(id):
 
 @app.route('/tag/<id>/posting_users')
 def tag_posting_users(id):
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    (begin, end) = filter(request.args)    
 
     users = [(r['user'], r['n']) for r in graph.run("""
         MATCH (tag:Tag) <-[:HAS_TAG]- (t:Tweet) <-[:POSTS]- (u:User)
@@ -179,8 +181,7 @@ def tag_posting_users(id):
 
 @app.route('/tweet/<id>')
 def tweet(id):
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    (begin, end) = filter(request.args)    
 
     result = graph.run("MATCH (t:Tweet{id: {id}}) <-[:POSTS]- (u:User) RETURN t, u", id=id).data()
     tweet = result[0]['t']
@@ -202,8 +203,7 @@ def tweet(id):
 
 @app.route('/tweet/<id>/interactions')
 def tweet_interactions(id):
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    (begin, end) = filter(request.args)    
 
     tweet = graph.run("MATCH (t:Tweet{id: { id }}) RETURN t", id=id).evaluate()
 
@@ -231,8 +231,7 @@ def tweet_interactions(id):
 
 @app.route('/tweet/<id>/interaction-types')
 def tweet_interaction_types(id):
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    (begin, end) = filter(request.args)    
 
     volume = [(r['type'], r['n']) for r in graph.run("""
         MATCH (:Tweet{id: { id }}) -[:REFERS_TO*]- (t:Tweet)
@@ -250,8 +249,7 @@ def tweet_interaction_types(id):
 
 @app.route('/tweet/<id>/tags')
 def tweet_tags(id):
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    (begin, end) = filter(request.args)    
 
     tags = [(r['tag'], r['n']) for r in graph.run("""
         MATCH (:Tweet{id: { id }}) -[:REFERS_TO*]- (t:Tweet) -[:HAS_TAG]-> (tag:Tag)
@@ -268,8 +266,7 @@ def tweet_tags(id):
 
 @app.route('/tweet/<id>/users')
 def tweet_users(id):
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    (begin, end) = filter(request.args)    
 
     users = [(r['user'], r['n']) for r in graph.run("""
         MATCH (:Tweet{id: { id }}) -[:REFERS_TO*]- (t:Tweet) <-[:POSTS]- (u:User)
@@ -286,8 +283,7 @@ def tweet_users(id):
 
 @app.route('/tweet/<id>/tweets')
 def tweet_related_tweets(id):
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    (begin, end) = filter(request.args)    
 
     tweets = [{ 'tweet': r['t'], 'user': r['u'] } for r in graph.run("""
         MATCH (:Tweet{id: { id }}) -[:REFERS_TO*]- (t:Tweet) <-[:POSTS]- (u:User)
@@ -306,8 +302,7 @@ def user_as_html(id):
 
 @app.route('/user/<id>/behaviour')
 def user_behaviour(id):
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    (begin, end) = filter(request.args)    
 
     result = [(r['type'], r['n']) for r in graph.run("""
         MATCH (u:User{id: {id}}) -[:POSTS]-> (t:Tweet)
@@ -323,8 +318,7 @@ def user_behaviour(id):
 
 @app.route('/user/<id>/activity')
 def user_activity(id):
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    (begin, end) = filter(request.args)    
 
     posts = [(r['date'], r['n']) for r in graph.run("""
         MATCH (u:User{id: {id}}) -[:POSTS]-> (t:Tweet)
@@ -366,8 +360,7 @@ def user_activity(id):
 
 @app.route('/user/<id>/interactors')
 def user_interactors(id):
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    (begin, end) = filter(request.args)    
     action = request.args.get("type", default="retweet")
 
     result = " ".join([link(chip("@" + r['user']['screen_name'], data=r['n']), f"/user/{ r['user']['id'] }", classes=['filtered']) for r in graph.run("""
@@ -382,8 +375,7 @@ def user_interactors(id):
 
 @app.route('/user/<id>/tags')
 def user_tags(id):
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    (begin, end) = filter(request.args)    
 
     result = " ".join([link(chip("#" + r['tag'], data=r['n']), f"/tag/{ r['tag'] }", classes=['filtered']) for r in graph.run("""
         MATCH (u:User{id: {id}}) -[:POSTS]-> (t:Tweet) -[:HAS_TAG]-> (tag:Tag)
@@ -412,17 +404,14 @@ def user_posts(id):
 
 @app.route('/user/<id>/info')
 def user_info(id):
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    (begin, end) = filter(request.args)    
 
     user = graph.run("MATCH (u:User{id: {id}}) RETURN u", id=id).evaluate()
     return render_template('user_info.html', user=user)
 
 @app.route('/user/<id>/network')
 def user_network(id):
-
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    (begin, end) = filter(request.args)    
 
     user = graph.run("MATCH (u:User{id: {id}}) RETURN u", id=id).evaluate()
 
@@ -457,9 +446,7 @@ def user_network(id):
 
 @app.route('/tweets/volume')
 def tweets_volume():
-
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    (begin, end) = filter(request.args)    
 
     tweets = [(r['date'], r['n']) for r in graph.run("""
         MATCH (t:Tweet)
@@ -491,9 +478,7 @@ def tweets_volume():
 
 @app.route('/tweets/tags')
 def tweets_tags_volume():
-
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    (begin, end) = filter(request.args)    
 
     volume = [(r['tag'], r['n']) for r in graph.run("""
         MATCH (t:Tweet) -[:HAS_TAG]-> (tag:Tag)
@@ -510,9 +495,7 @@ def tweets_tags_volume():
 
 @app.route('/tweets/posting-users')
 def tweets_most_posting_users():
-
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    (begin, end) = filter(request.args)    
 
     volume = [(r['u'], r['n']) for r in graph.run("""
         MATCH (t:Tweet) <-[:POSTS]- (u:User)
@@ -529,9 +512,7 @@ def tweets_most_posting_users():
 
 @app.route('/tweets/mentioned-users')
 def tweets_most_mentioned_users():
-
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    (begin, end) = filter(request.args)    
 
     volume = [(r['u'], r['n']) for r in graph.run("""
         MATCH (t:Tweet) -[:MENTIONS]-> (u:User)
@@ -548,9 +529,7 @@ def tweets_most_mentioned_users():
 
 @app.route('/tweets/types')
 def tweets_type_volume():
-
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    (begin, end) = filter(request.args)    
 
     volume = [(r['type'], r['n']) for r in graph.run("""
         MATCH (t:Tweet)
@@ -568,8 +547,7 @@ def tweets_type_volume():
 
 @app.route('/search')
 def search():
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    (begin, end) = filter(request.args)    
     search = request.args.get("searchterm", default="")
     entity = request.args.get("type", default="users")
 
@@ -582,26 +560,22 @@ def search_tweets():
 
 @app.route('/search/user')
 def search_users():
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
     search = request.args.get("searchterm", default="")
 
     hits = [r['user'] for r in graph.run("""
         CALL db.index.fulltext.queryNodes('users', { search }) YIELD node AS user, score
         MATCH (user:User) -[:POSTS]-> (t:Tweet) <-[:REFERS_TO]- (r:Tweet)
-        WHERE t.created_at >= datetime({ begin }) AND t.created_at <= datetime({ end })
         RETURN user, count(r) AS i
         ORDER BY i DESCENDING
         LIMIT 1000
-        """, search=search, begin=begin, end=end)]
+        """, search=search)]
 
     return render_template('users_list.html', users=hits, search=search)   
 
 
 @app.route('/retweets/')
 def get_retweets():
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    (begin, end) = filter(request.args)    
     sid = request.args.get("source")
     tid = request.args.get("target")
 
@@ -616,8 +590,7 @@ def get_retweets():
 
 @app.route('/stats/postings')
 def stats_for_postings():
-    begin = request.args.get("begin", default="1970-01-01")
-    end = request.args.get("end", default=dt.now().strftime("%Y-%m-%d"))
+    (begin, end) = filter(request.args)    
 
     N = 10000
     result = [(r['duration'], r['n']) for r in graph.run("""
@@ -637,10 +610,5 @@ def start(settings):
     url = settings['neo4j_url']
     usr = settings['neo4j_usr']
     pwd = settings['neo4j_pwd']
-
     graph = Graph(url, auth=(usr, pwd))
-
-    print(statics)
-    print(templates)
-
     app.run()
