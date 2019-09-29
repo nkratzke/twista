@@ -41,8 +41,12 @@
                         <td>{{ user['location'] }}</td>
                     </tr>
                     <tr>
-                        <td>Follower:</td>
+                        <td>Follows:</td>
                         <td>{{ user['friends'] }}</td>
+                    </tr>
+                    <tr>
+                        <td>Follower:</td>
+                        <td>{{ user['followers'] }}</td>
                     </tr>
                     <tr>
                         <td>Listed:</td>
@@ -58,15 +62,19 @@
                     <a href="#quoters" class="mdl-tabs__tab">Quoters</a>
                 </div>
                 <div id='behaviour' class="mdl-tabs__panel is-active">
-                    <div class="mdl-spinner mdl-js-spinner is-active"></div>
-                    <script>
-                        loadJson("/user/{{ user['id'] }}/behaviour", { 
-                                'begin': localStorage.getItem('begin'), 
-                                'end': localStorage.getItem('end')
-                            }, 
-                            data => plot(document.getElementById('behaviour'), data)
-                        );
-                    </script>
+                    <div class="mdl-card__supporting-text">
+                        <div id='postings'>
+                            <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                            <script>
+                                loadJson("/user/{{ user['id'] }}/behaviour", { 
+                                        'begin': localStorage.getItem('begin'), 
+                                        'end': localStorage.getItem('end')
+                                    }, 
+                                    data => plot(document.getElementById('postings'), data)
+                                );
+                            </script>        
+                        </div>
+                    </div>
                 </div>
                 <div id='tags' class="mdl-tabs__panel mdl-card__supporting-text">
                     <div class="mdl-spinner mdl-js-spinner is-active"></div>
@@ -122,28 +130,39 @@
                         <div class="mdl-cell mdl-cell--6-col">                    
                             <div id="activity-plot">
                                 <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                                <script>
+                                    loadJson("/user/{{ user['id'] }}/activity", { 
+                                            'begin': localStorage.getItem('begin'), 
+                                            'end': localStorage.getItem('end')
+                                        }, 
+                                        data => { 
+                                            plot(document.querySelector('#activity-plot'), data);
+                                            document.querySelector('#activity-plot > .js-plotly-plot').on('plotly_click', ev => {
+                                                loadText("/user/{{ user['id'] }}/contents", { 'of': ev['points'][0]['x'] }, response => {
+                                                    document.querySelector('#activity-inspector').innerHTML = "<strong>User content</strong>" + response;
+                                                    refreshFilter();
+                                                });                                    ;
+                                            });
+                                        }
+                                    );
+                                </script>
+                            </div>
+                            <div id='punchcard'>
+                                <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                                <script>
+                                    loadJson("/user/{{ user['id'] }}/punchcard", { 
+                                            'begin': localStorage.getItem('begin'), 
+                                            'end': localStorage.getItem('end')
+                                        }, 
+                                        data => plot(document.getElementById('punchcard'), data)
+                                    );
+                                </script>  
                             </div>
                         </div>
                         <div class="mdl-cell mdl-cell--6-col">
                             <div id="activity-inspector" class="inspector"></div>
                         </div>
                     </div>
-                    <script>
-                        loadJson("/user/{{ user['id'] }}/activity", { 
-                                'begin': localStorage.getItem('begin'), 
-                                'end': localStorage.getItem('end')
-                            }, 
-                            data => { 
-                                plot(document.querySelector('#activity-plot'), data);
-                                document.querySelector('#activity-plot > .js-plotly-plot').on('plotly_click', ev => {
-                                    loadText("/user/{{ user['id'] }}/contents", { 'of': ev['points'][0]['x'] }, response => {
-                                        document.querySelector('#activity-inspector').innerHTML = "<strong>User content</strong>" + response;
-                                        refreshFilter();
-                                    });                                    ;
-                                });
-                            }
-                        );
-                    </script>
                 </div>
                 <div class="mdl-tabs__panel" id="network">
                     <div class="mdl-spinner mdl-js-spinner is-active"></div>

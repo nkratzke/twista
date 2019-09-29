@@ -409,6 +409,43 @@ def user_info(id):
     user = graph.run("MATCH (u:User{id: {id}}) RETURN u", id=id).evaluate()
     return render_template('user_info.html', user=user)
 
+@app.route('/user/<id>/punchcard')
+def user_punchcard(id):
+    (begin, end) = filter(request.args)
+
+    pc = { d: { h: 0 for h in range(24) } for d in range(1, 8) }
+    for r in graph.run("""
+        MATCH (u:User{id: {id}}) -[:POSTS]-> (t:Tweet)
+        WHERE t.created_at >= datetime({begin}) AND t.created_at <= datetime({end})
+        RETURN t.created_at.weekday AS day, t.created_at.hour AS hour, count(t) AS n
+        """, id=id, begin=begin, end=end):
+        pc[r['day']][r['hour']] = r['n']
+
+    weekdays =['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    hours = range(24)
+
+    data = [{
+        'x': [f"{h}h" for h in hours],
+        'y': weekdays,
+        'z': [[pc[d][h] for h in hours] for d in range(1, 8)],
+        'colorscale': [
+            ['0.0', '#3F51B600'],
+            ['0.1', '#3F51B611'],
+            ['0.2', '#3F51B622'],
+            ['0.3', '#3F51B633'],
+            ['0.4', '#3F51B644'],
+            ['0.5', '#3F51B655'],
+            ['0.6', '#3F51B677'],
+            ['0.7', '#3F51B699'],
+            ['0.8', '#3F51B6BB'],
+            ['0.9', '#3F51B6DD'],
+            ['1.0', '#3F51B6FF']
+        ],
+        'type': 'heatmap'
+    }]
+
+    return jsonify(data)
+
 @app.route('/user/<id>/network')
 def user_network(id):
     (begin, end) = filter(request.args)    
@@ -437,7 +474,7 @@ def user_network(id):
     nodes.extend([rt for _, rt, _ in retweeters])
     mark = lambda n: 'start' if (n['id'] == user['id']) else 'follow'
     network = { 
-        'nodes': [{ 'data': { 'id': u['id'], 'screen_name': u['screen_name'], 'select': mark(u) }} for u in set(nodes)], 
+        'nodes': [{ 'data': { 'id': u['id'], 'screen_name': "@" + u['screen_name'], 'select': mark(u) }} for u in set(nodes)], 
         'edges': [{ 'data': { 'source': u['id'], 'target': rt['id'], 'directed': True, 'qty': n }} for u, rt, n in retweeters] 
     }
 

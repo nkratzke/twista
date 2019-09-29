@@ -113,4 +113,5 @@ table tr, table td {
 .inspector {
     max-height: 750px;
     overflow-y: scroll;
+    border-left: 0.1em solid lightgray;
 }

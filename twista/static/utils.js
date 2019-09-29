@@ -62,7 +62,7 @@ function plotRetweetNetwork(network, container, inspect) {
     console.log("plotting into " + container);
     var base_color = '#66CCFF';
     var highlight_outgoing = '#FF4081';
-    var highlight_incoming = 'orange';
+    var highlight_incoming = 'blue';
     var cy = cytoscape({
         container: container,
         layout: { name: 'random' },
@@ -81,7 +81,6 @@ function plotRetweetNetwork(network, container, inspect) {
                     'color': highlight_outgoing,
                     'font-size': 24,
                     'background-color': highlight_outgoing,
-                    'opacity': 1.0
                 }
             },
             {
@@ -99,7 +98,7 @@ function plotRetweetNetwork(network, container, inspect) {
                     'curve-style': 'bezier',
                     'target-arrow-shape': 'triangle',
                     'target-arrow-color': base_color, 
-                    'opacity': 0.5
+                    'opacity': 0.25
                 }
             },
             {
@@ -113,15 +112,11 @@ function plotRetweetNetwork(network, container, inspect) {
             {
                 selector: '.incoming, .current',
                 style: {
+                    'width': 100,
                     'background-color': highlight_incoming,
                     'line-color': highlight_incoming,
-                    'target-arrow-color': highlight_incoming
-                }
-            },
-            {
-                select: 'edge.incoming',
-                style: {
-                    'width': 100,
+                    'target-arrow-color': highlight_incoming,
+                    'line-style': 'dashed',
                     'opacity': 1.0
                 }
             }
