@@ -4,29 +4,10 @@
 
 <div class="mdl-grid">
 
-    <div class="mdl-cell mdl-cell--8-col">
-        <div class="mdl-card mdl-shadow--2dp">
-            <div class="mdl-card__title">
-                <h2 class="mdl-card__title-text">Tweet volume of the hashtag #{{ tag }}</h2>
-            </div>
-            <div id='timeline' class="mdl-card__supporting-text">
-                <div class="mdl-spinner mdl-js-spinner is-active"></div>
-                <script>
-                    loadJson("/tag/{{ tag }}/activity", { 
-                            'begin': localStorage.getItem('begin'), 
-                            'end': localStorage.getItem('end')
-                        }, 
-                        data => plot(document.getElementById('timeline'), data)
-                    );
-                </script>
-            </div>
-        </div>
-    </div>
-
     <div class="mdl-cell mdl-cell--4-col">
         <div class="mdl-card mdl-shadow--2dp">
             <div class="mdl-card__title">
-                <h2 class="mdl-card__title-text">Posting types</h2>
+                <h2 class="mdl-card__title-text">Hashtag #{{ tag }}</h2>
             </div>
             <div id='behaviour' class="mdl-card__supporting-text">
                 <div class="mdl-spinner mdl-js-spinner is-active"></div>
@@ -42,63 +23,34 @@
         </div>
     </div>
 
-    <div class="mdl-cell mdl-cell--4-col">
+    <div class="mdl-cell mdl-cell--8-col">
         <div class="mdl-card mdl-shadow--2dp">
             <div class="mdl-card__title">
-                <h2 class="mdl-card__title-text">Most correlated tags</h2>
+                <h2 class="mdl-card__title-text">Insights</h2>
             </div>
-            <div id='correlated' class="mdl-card__supporting-text">
-                <div class="mdl-spinner mdl-js-spinner is-active"></div>
-                <script>
-                    loadText("/tag/{{ tag }}/tags", { 
-                            'begin': localStorage.getItem('begin'), 
-                            'end': localStorage.getItem('end')
-                        }, 
-                        response => document.getElementById('correlated').innerHTML = response
-                    );
-                </script>
+            <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
+                <div class="mdl-tabs__tab-bar">
+                    <a href="#volume" class="mdl-tabs__tab is-active">Volume</a>
+                    <a href="#tags" class="mdl-tabs__tab">Correlated tags</a>
+                </div>
+                <div id='volume' class="mdl-tabs__panel is-active">
+                    <div class="mdl-card__supporting-text">
+                        <div id='timeline'>
+                            <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                            <script>
+                                loadJson("/tag/{{ tag }}/volume", { 
+                                        'begin': localStorage.getItem('begin'), 
+                                        'end': localStorage.getItem('end')
+                                    }, 
+                                    data => plot(document.getElementById('timeline'), data)
+                                );
+                            </script>        
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-
-    <div class="mdl-cell mdl-cell--4-col">
-        <div class="mdl-card mdl-shadow--2dp">
-            <div class="mdl-card__title">
-                <h2 class="mdl-card__title-text">Most posting users</h2>
-            </div>
-            <div id='mentioned-users' class="mdl-card__supporting-text">
-                <div class="mdl-spinner mdl-js-spinner is-active"></div>
-                <script>
-                    loadText("/tag/{{ tag }}/posting_users", { 
-                            'begin': localStorage.getItem('begin'), 
-                            'end': localStorage.getItem('end')
-                        }, 
-                        response => document.getElementById('mentioned-users').innerHTML = response
-                    );
-                </script>
-            </div>
-        </div>
-    </div>
-
-    <div class="mdl-cell mdl-cell--4-col">
-        <div class="mdl-card mdl-shadow--2dp">
-            <div class="mdl-card__title">
-                <h2 class="mdl-card__title-text">Most mentioned users</h2>
-            </div>
-            <div id='posting-users' class="mdl-card__supporting-text">
-                <div class="mdl-spinner mdl-js-spinner is-active"></div>
-                <script>
-                    loadText("/tag/{{ tag }}/mentioned_users", { 
-                            'begin': localStorage.getItem('begin'), 
-                            'end': localStorage.getItem('end')
-                        }, 
-                        response => document.getElementById('posting-users').innerHTML = response
-                    );
-                </script>
-            </div>
-        </div>
-    </div>
-
 </div>
 
 {% endblock %}

@@ -69,7 +69,7 @@ def tag(id):
     (begin, end) = filter(request.args)    
     return render_template('tag.html', tag=id)
 
-@app.route('/tag/<id>/activity')
+@app.route('/tag/<id>/volume')
 def tag_activity(id):
     (begin, end) = filter(request.args)    
 
@@ -82,25 +82,11 @@ def tag_activity(id):
         ORDER BY date
         """, id=id, begin=begin, end=end)]
 
-    reactions = [(r['date'], r['n']) for r in graph.run("""
-        MATCH (tag:Tag) <-[:HAS_TAG]- (:Tweet) <-[:REFERS_TO*]- (r:Tweet)
-        WHERE toUpper(tag.id) = toUpper({ id }) AND 
-              r.created_at >= datetime({ begin }) AND
-              r.created_at <= datetime({ end })
-        RETURN date(r.created_at) AS date, count(r) AS n
-        ORDER BY date
-        """, id=id, begin=begin, end=end)]
-
     return jsonify([{
             'x': [str(d) for d, n in volume],
             'y': [n for d, n in volume],
             'type': 'scatter',
             'name': 'posts'
-        }, {
-            'x': [str(d) for d, n in reactions],
-            'y': [n for d, n in reactions],
-            'type': 'scatter',
-            'name': 'reactions'
         }
     ])
 
@@ -457,15 +443,15 @@ def user_network(id):
     scanned = new.copy()
 
     retweeters = []
-    for n in [25, 50, 100, 200]:
+    for n in [50, 5, 5]:
         retweeters.extend([(r['u'], r['rt'], r['n']) for r in graph.run("""
             UNWIND {uids} AS uid
             MATCH (u:User{id: uid}) -[:POSTS]-> (:Tweet) <-[:REFERS_TO]- (t:Tweet{type: 'retweet'}) <-[:POSTS]- (rt:User)
             WHERE t.created_at >= datetime({ begin }) AND t.created_at <= datetime({ end }) AND u <> rt
             RETURN u, rt, count(rt) AS n
             ORDER BY n DESCENDING
-            LIMIT { n }
-            """, uids=list(process), begin=begin, end=end, n=n)])
+            LIMIT {n}
+            """, uids=list(process), begin=begin, end=end, n=len(new) * n)])
         new = set([r['id'] for u, r, _ in retweeters])
         process = new - scanned
         scanned = scanned.union(new)
