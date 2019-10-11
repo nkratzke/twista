@@ -48,6 +48,21 @@
                         </div>
                     </div>
                 </div>
+                <div id='tags' class="mdl-tabs__panel">
+                    <div class="mdl-card__supporting-text">
+                        <div id='correlated'>
+                            <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                            <script>
+                                loadText("/tag/{{ tag }}/tags", { 
+                                        'begin': localStorage.getItem('begin'), 
+                                        'end': localStorage.getItem('end')
+                                    }, 
+                                    response => document.getElementById('correlated').innerHTML = response
+                                );
+                            </script>        
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
