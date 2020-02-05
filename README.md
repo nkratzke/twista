@@ -29,11 +29,12 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  import  Imports Twitter records into a Neo4j graph analytical database ...
-  init    Initializes a directory to be used with Twista ...
-  lab     Starts Jupyter lab for analysis
-  record  Records a Twitter stream
-  stop    Stops the Neo4j analytical database
+  import     Imports Twitter records into a Neo4j graph database
+  init       Initializes a directory to be used with Twista
+  lab        Starts Jupyter lab for analysis
+  record     Records a Twitter stream
+  stop       Stops the Neo4j database
+  version    Reports the version of Twista
 ```
 
 We recommend to study the [Wiki]() on how to record and analyze public Twitter streams using Twista and graph databases.

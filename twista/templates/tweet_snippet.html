@@ -1,0 +1,21 @@
+<div class="mdl-card mdl-shadow--2dp tweet">
+    <div class="mdl-card__title {{ tweet['type'] }}">
+        <h2 class="mdl-card__title-text">
+            {{ tweet['type'] | upper }}
+        </h2>
+    </div>
+    <div class="mdl-card__supporting-text">
+        <a class="filtered" href="/user/{{ user['id'] }}">{{ ("@" + user['screen_name']) | chip | safe }}</a>
+        at {{ tweet['created_at'] | datetime }},
+        RT: <span class="retweets">{{ tweet['retweets'] }}</span>,
+        Likes: <span class="favs">{{ tweet['favourites'] }}</span>
+    </div>
+    {% if tweet['text'] %}
+    <div class="mdl-card__supporting-text">
+        <quote>{{ tweet['text'] | safe }}</quote>
+    </div>
+    {% endif %}
+    <div class="mdl-card__supporting-text">
+        {{ ctx | tweetlist | safe }}
+    </div>
+</div>

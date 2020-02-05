@@ -138,7 +138,8 @@ class Status(TweetObject):
             r['text'] = self.text()
 
         if self.is_quote():
-            r['refers_to'] = self.json['quoted_status_id_str']
+            if 'quoted_status_id_str' in self.json:
+                r['refers_to'] = self.json['quoted_status_id_str']
 
         if self.is_retweet():
             r['refers_to'] = self.retweet().id()
@@ -154,11 +155,15 @@ class User(TweetObject):
     def screenname(self):
         return self.json['screen_name']
     
+    def name(self):
+        return self.json['name']
+
     def as_dict(self):
         return {
             'twista': twista.VERSION,
             'type': 'user',
             'id': self.id(),
+            'name': self.name(), # Since Version 0.3.1b
             'screen_name': self.screenname(),
             'created_at': self.created_at(),
             'recorded_at': self.recorded_at(),

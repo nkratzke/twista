@@ -32,11 +32,9 @@ def cli():
 @click.option('--with-neo4j', is_flag=True, help='Install Neo4j (default: no install)')
 def init(config, consumer_key, consumer_secret, access_token, access_token_secret, neo4j_url, neo4j_usr, neo4j_pwd, with_neo4j):
     """
-    Initializes a directory to be used with Twista by creating
-    a credentials.json file in the current directory.\n
-    \n
+    Initializes a directory to be used with Twista.\n
     The values can be set directly using the command options.
-    Or the created file can be edited otherwise after creation.
+    Or the created credentials.json file can be edited otherwise after creation.
     """
 
     if not Path(config).exists():
@@ -76,7 +74,7 @@ def record(config, chunk, languages, tracks):
 @click.option('--config', default='config.json', type=click.Path(dir_okay=False), help='Config file used for Neo4j access (defaults to config.json)')
 @click.argument('records', nargs=-1)
 def importing(config, records):
-    """Imports Twitter records into a Neo4j graph database for analysis purposes."""
+    """Imports Twitter records into a Neo4j graph database for analysis."""
     try:
         neo4j.start_neo4j(config)
         click.echo(f"Considering {len(records)} records (this may take some time ...)")
@@ -111,14 +109,15 @@ def version():
     """Reports the version of Twista"""
     click.echo(VERSION)
 
-@cli.command()
-@click.option('--config', default='config.json', type=click.Path(dir_okay=False), help='Config file used for Neo4j access and navigator settings (defaults to config.json)')
-def navigator(config):
-    """Starts the Twista navigator app"""
-    neo4j.start_neo4j(config)
-    with open(config) as file:
-        settings = json.load(file)
-        nav.start(settings)
+# Prepared for Version 0.4
+# @cli.command()
+# @click.option('--config', default='config.json', type=click.Path(dir_okay=False), help='Config file used for Neo4j access and navigator settings (defaults to config.json)')
+# def navigator(config):
+#     """Starts the Twista navigator app"""
+#     neo4j.start_neo4j(config)
+#     with open(config) as file:
+#         settings = json.load(file)
+#         nav.start(settings)
 
 cli = click.CommandCollection(sources=[cli])
 if __name__ == '__main__':

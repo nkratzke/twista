@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="mdl-grid">
+    <div class="mdl-cell mdl-cell--12-col">
+        {{ tweet | render_tweet(of=user, ctx=ctx) | safe }}
+    </div>
+
+    <div class="mdl-cell mdl-cell--6-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Interaction history</h2>
+            </div>
+            <div id='interaction-timeline' class="mdl-card__supporting-text">
+                <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                <script>
+                    loadJson("/tweet/{{ tweet['id'] }}/interactions", { 
+                            'begin': localStorage.getItem('begin'), 
+                            'end': localStorage.getItem('end')
+                        }, 
+                        data => plot(document.getElementById('interaction-timeline'), data)
+                    );
+                </script>
+            </div>
+        </div>
+    </div>
+
+    <div class="mdl-cell mdl-cell--6-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Interaction types</h2>
+            </div>
+            <div id='interaction-types' class="mdl-card__supporting-text">
+                <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                <script>
+                    loadJson("/tweet/{{ tweet['id'] }}/interaction-types", { 
+                            'begin': localStorage.getItem('begin'), 
+                            'end': localStorage.getItem('end')
+                        }, 
+                        data => plot(document.getElementById('interaction-types'), data)
+                    );
+                </script>
+            </div>
+        </div>
+    </div>
+
+    <div class="mdl-cell mdl-cell--6-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Interacting tweets (chronological)</h2>
+            </div>
+            <div id='interaction-tweets' class="mdl-card__supporting-text">
+                <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                <script>
+                    loadText("/tweet/{{ tweet['id'] }}/tweets", { 
+                            'begin': localStorage.getItem('begin'), 
+                            'end': localStorage.getItem('end')
+                        }, 
+                        response => document.getElementById('interaction-tweets').innerHTML = response
+                    );
+                </script>
+            </div>
+        </div>
+    </div>
+
+    <div class="mdl-cell mdl-cell--6-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Observed users in interactions</h2>
+            </div>
+            <div id='observed-users' class="mdl-card__supporting-text">
+                <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                <script>
+                    loadText("/tweet/{{ tweet['id'] }}/users", { 
+                            'begin': localStorage.getItem('begin'), 
+                            'end': localStorage.getItem('end')
+                        }, 
+                        response => document.getElementById('observed-users').innerHTML = response
+                    );
+                </script>
+            </div>
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Observed tags in interactions</h2>
+            </div>
+            <div id='observed-tags' class="mdl-card__supporting-text">
+                <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                <script>
+                    loadText("/tweet/{{ tweet['id'] }}/tags", { 
+                            'begin': localStorage.getItem('begin'), 
+                            'end': localStorage.getItem('end')
+                        }, 
+                        response => document.getElementById('observed-tags').innerHTML = response
+                    );
+                </script>
+            </div>
+        </div>
+    </div>
+    
+</div>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="mdl-grid">
+
+    <div class="mdl-cell mdl-cell--6-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Search for tweets</h2>
+            </div>
+            <div class="mdl-card__supporting-text">
+                <form action="/search">
+                    <input type="hidden" name="type" value="tweet">
+                    <input type="hidden" name="begin" value="">
+                    <input type="hidden" name="end" value="">
+                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                        <input class="mdl-textfield__input" type="text" name="searchterm" id="tweetsearch">
+                        <label class="mdl-textfield__label" for="begin">Search</label>
+                    </div>
+                    <button class="mdl-button mdl-js-button mdl-button--colored">
+                        <i class="material-icons">search</i> Tweets
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="mdl-cell mdl-cell--6-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Search for users</h2>
+            </div>
+            <div class="mdl-card__supporting-text">
+                <form action="/search">
+                    <input type="hidden" name="type" value="user">
+                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                        <input class="mdl-textfield__input" type="text" name="searchterm" id="tweetsearch">
+                        <label class="mdl-textfield__label" for="begin">Search</label>
+                    </div>
+                    <button class="mdl-button mdl-js-button mdl-button--colored">
+                        <i class="material-icons">search</i> Users
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="mdl-cell mdl-cell--12-col">
+        <div class="mdl-card">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Hits</h2>
+            </div>
+            <div id="hits" class="mdl-card__supporting-text">
+                <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                <script>
+                    loadText("/search/{{ type }}", { 
+                            'begin': localStorage.getItem('begin'), 
+                            'end': localStorage.getItem('end'),
+                            'searchterm': '{{ searchterm }}'
+                        },
+                        response => document.getElementById('hits').innerHTML = response
+                    );
+                </script> 
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

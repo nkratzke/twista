@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="mdl-grid">
+
+    <div class="mdl-cell mdl-cell--4-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Hashtag #{{ tag }}</h2>
+            </div>
+            <div id='behaviour' class="mdl-card__supporting-text">
+                <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                <script>
+                    loadJson("/tag/{{ tag }}/behaviour", { 
+                            'begin': localStorage.getItem('begin'), 
+                            'end': localStorage.getItem('end')
+                        }, 
+                        data => plot(document.getElementById('behaviour'), data)
+                    );
+                </script>
+            </div>
+        </div>
+    </div>
+
+    <div class="mdl-cell mdl-cell--8-col">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Insights</h2>
+            </div>
+            <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
+                <div class="mdl-tabs__tab-bar">
+                    <a href="#volume" class="mdl-tabs__tab is-active">Volume</a>
+                    <a href="#tags" class="mdl-tabs__tab">Correlated tags</a>
+                </div>
+                <div id='volume' class="mdl-tabs__panel is-active">
+                    <div class="mdl-card__supporting-text">
+                        <div id='timeline'>
+                            <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                            <script>
+                                loadJson("/tag/{{ tag }}/volume", { 
+                                        'begin': localStorage.getItem('begin'), 
+                                        'end': localStorage.getItem('end')
+                                    }, 
+                                    data => plot(document.getElementById('timeline'), data)
+                                );
+                            </script>        
+                        </div>
+                    </div>
+                </div>
+                <div id='tags' class="mdl-tabs__panel">
+                    <div class="mdl-card__supporting-text">
+                        <div id='correlated'>
+                            <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                            <script>
+                                loadText("/tag/{{ tag }}/tags", { 
+                                        'begin': localStorage.getItem('begin'), 
+                                        'end': localStorage.getItem('end')
+                                    }, 
+                                    response => document.getElementById('correlated').innerHTML = response
+                                );
+                            </script>        
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

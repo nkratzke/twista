@@ -1,42 +1,73 @@
 <!doctype html>
 <head>
     <title>{{ title }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">    
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Roboto:300,400,500,700" type="text/css">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.9.2/cytoscape.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape-fcose@1.0.0/cytoscape-fcose.min.js"></script>
+    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+ 
+    <script src="{{ url_for('static', filename='utils.js') }}"></script>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 </head>
 <body>
-    <div id="head">
-        <h1>{{ title }}</h1>
-    </div>
-    <div class="block">
-        <div id="search">
-            <form action="/search" method="get">
-                <input type="text" name="search" placeholder="Search tweets ...">
-            </form>
-        </div>            
-    </div>
-    <div class="block">
-        <div class="tweets">
-            {% for tweet in tweets %}
-            <div class='tweet {{ tweet["tweet"]["type"] }}'>
-                <strong>[{{ tweet['tweet']['type'].upper() }}]</strong> from 
-                <a href="/user/{{ tweet['user']['id'] }}">@{{ tweet['user']['screen_name'] }}</a>
-                Date: {{ tweet['tweet']['created_at'] }}<br>
-                RTs: {{ tweet['tweet']['retweets'] }}, FAVs: {{ tweet['tweet']['favourites'] }}
-                <div class='text'>
-                    <a href="/tweet/{{ tweet['tweet']['id'] }}">{{ tweet['tweet']['text'] }}</a>
-                </div>
-                {% if tweet['refers_to']['text'] %}
-                <blockquote>
-                    <a href="/tweet/{{ tweet['refers_to']['id'] }}">
-                    {{ tweet['refers_to']['text'] }}
-                    </a> 
-                </blockquote>
-                {% endif %}
+    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+        <header class="mdl-layout__header">
+            <div class="mdl-layout__header-row">
+                <span class="mdl-layout-title">Twista</span>
+                <div class="mdl-layout-spacer"></div>
+                <div class="mdl-layout-spacer"></div>
+                <nav class="mdl-navigation mdl-layout--large-screen-only">
+                    <a class="mdl-navigation__link filtered" href="/">Trends</a>
+                    <a class="mdl-navigation__link filtered" href="/search"><i class="material-icons">search</i> Search</a>
+                </nav>
             </div>
-            {% endfor %}
+        </header>
+
+        <div class="mdl-layout__drawer">
+            <span class="mdl-layout-title">Twista</span>
+            <nav class="mdl-navigation">
+                <a class="mdl-navigation__link filtered" href="/">Trends</a>
+                <a class="mdl-navigation__link filtered" href="/search"><i class="material-icons">search</i> Search</a>
+            </nav>
+        </div>
+
+        <main class="mdl-layout__content">
+            <div class="page-content">
+                <div class="mdl-grid">
+                    <div class="mdl-cell mdl-cell--12-col">
+                        <form id="filter">
+                            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label has-placeholder">
+                                <input class="mdl-textfield__input" type="date" name="begin" id="begin">
+                                <label class="mdl-textfield__label" for="begin">Begin</label>
+                            </div>
+                            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label has-placeholder">
+                                <input class="mdl-textfield__input" type="date" name="end" id="end">
+                                <label class="mdl-textfield__label" for="end">End</label>
+                            </div>
+                            <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored">
+                                <i class="material-icons">loop</i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+
+        <div id="footer">
+            Copyright (C) 2019, Nane Kratzke
         </div>
     </div>
-    <div id="footer">
-        Copyright (C) 2019, Nane Kratzke
-    </div>
+    <script>
+        observeFilter();
+        refreshFilter();
+    </script>
 </body>

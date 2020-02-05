@@ -1,0 +1,45 @@
+<div class="mdl-card__title">
+    <h2 class="mdl-card__title-text">User&nbsp;
+        <a href="/user/{{ user['id'] }}" class="filtered">@{{ user['screen_name'] }}</a>
+    </h2>
+</div>
+<div class="mdl-card__supporting-text">
+    <table class="user">
+        <tr>
+            <td>Name:</td>
+            <td>{{ user['name'] | safe }}</td>
+        </tr>
+        <tr>
+            <td>Description:</td>
+            <td>{{ user['description'] | safe }}</td>
+        </tr>
+        <tr>   
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td>Posts:</td>
+            <td>{{ user['statuses'] }}</td>
+        </tr>
+        <tr>
+            <td>Since:</td>
+            <td>{{ user['created_at'] | datetime }}</td>
+        </tr>
+        <tr>
+            <td>Location:</td>
+            <td>{{ user['location'] }}</td>
+        </tr>
+        <tr>
+            <td>Follows:</td>
+            <td>{{ user['friends'] }}</td>
+        </tr>
+        <tr>
+            <td>Follower:</td>
+            <td>{{ user['followers'] }}</td>
+        </tr>
+        <tr>
+            <td>Listed:</td>
+            <td>{{ user['listed'] }}</td>
+        </tr>
+    </table>
+</div>

@@ -96,7 +96,7 @@ def import_records(graph, records):
         graph.run("CALL db.index.fulltext.createNodeIndex('tweets', ['Tweet'], ['text'])")
         print("Created fulltext index for tweets")
     if 'users' not in existing:
-        graph.run("CALL db.index.fulltext.createNodeIndex('users', ['User'], ['screen_name', 'description'])")
+        graph.run("CALL db.index.fulltext.createNodeIndex('users', ['User'], ['name', 'screen_name', 'description', 'location'])")
         print("Created fulltext index for users")
     graph.sync()
 
