@@ -32,7 +32,6 @@ Commands:
   import     Imports Twitter records into a Neo4j graph database
   init       Initializes a directory to be used with Twista
   lab        Starts Jupyter lab for analysis
-  navigator  Starts the Twista navigator app
   record     Records a Twitter stream
   stop       Stops the Neo4j database
   version    Reports the version of Twista

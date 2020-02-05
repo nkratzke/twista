@@ -138,7 +138,8 @@ class Status(TweetObject):
             r['text'] = self.text()
 
         if self.is_quote():
-            r['refers_to'] = self.json['quoted_status_id_str']
+            if 'quoted_status_id_str' in self.json:
+                r['refers_to'] = self.json['quoted_status_id_str']
 
         if self.is_retweet():
             r['refers_to'] = self.retweet().id()
