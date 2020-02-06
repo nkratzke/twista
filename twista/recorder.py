@@ -3,8 +3,10 @@ import time
 import gzip
 import json
 import atexit
+import sys
 import tweepy
 import traceback
+import signal
 from termcolor import colored
 from twista.dm import TweetObject
 
@@ -81,6 +83,7 @@ def recording(config, chunksize, languages, tracks):
         recorder.write()
         stream.disconnect()
 
+    signal.signal(signal.SIGTERM, lambda sig, frame : sys.exit(0))
     atexit.register(shutdown)
 
     while True:
