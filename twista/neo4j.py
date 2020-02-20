@@ -136,16 +136,19 @@ def import_records(graph, records):
             posts = [{ 'user_id': t['user'], 'tweet_id': t['id'] } for t in tweets if 'user' in t]
             p.set_description(f"Processing {p.n}/{p.total} (merging {len(posts)} posts)")
             graph.run(merge_posts, json=posts)
+            graph.sync()
 
             # Generate refers_to relations
             refers = [{ 'tweet_id': t['id'], 'ref_tweet_id': t['refers_to'] } for t in tweets if 'refers_to' in t]
             p.set_description(f"Processing {p.n}/{p.total} (merging {len(refers)} referings)")
             graph.run(merge_refers, json=refers)
+            graph.sync()
 
             # Generate mention relations
             mentions = [{ 'tweet_id': t['id'], 'mentioned_id': mid } for t in tweets for mid in t['mentioned_ids']]
             p.set_description(f"Processing {p.n}/{p.total} (merging {len(mentions)} mentions)")
             graph.run(merge_mentions, json=mentions)
+            graph.sync()
 
             # Generate tag relations
             tags = set([tag for t in tweets for tag in t['hashtags']]) - seen_tags
@@ -155,6 +158,7 @@ def import_records(graph, records):
             graph.run(create_tags, json=list(tags))
             p.set_description(f"Processing {p.n}/{p.total} (merging {len(tag_rels)} taggings)")            
             graph.run(merge_tags, json=tag_rels)
+            graph.sync()
 
             # Generate url relations
             urls = set([url for t in tweets for url in t['urls']]) - seen_urls
@@ -164,6 +168,7 @@ def import_records(graph, records):
             graph.run(create_urls, json=list(urls))
             p.set_description(f"Processing {p.n}/{p.total} (merging {len(url_rels)} url refers)")            
             graph.run(merge_urls, json=url_rels)
+            graph.sync()
         
         imported.append(f)
         with open('imported.json', 'w') as f:
