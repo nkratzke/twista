@@ -124,8 +124,9 @@ def import_records(graph, records):
             tweets = [d for d in data if d['type'] != 'user']
             imports = copy.deepcopy(tweets)
             for t in imports:
-                t.pop('mentions', None)
-                t.pop('mentioned_ids', None)
+                # Remove content that will be stored in relations
+                # t.pop('mentions', None)
+                # t.pop('mentioned_ids', None)
                 t.pop('hashtags', None)
                 t.pop('urls', None)
             p.set_description(f"Processing {p.n}/{p.total} (merging {len(tweets)} tweets)")
@@ -151,7 +152,7 @@ def import_records(graph, records):
             graph.sync()
 
             # Generate tag relations
-            tags = set([tag for t in tweets for tag in t['hashtags']]) - seen_tags
+            tags = set([tag.upper() for t in tweets for tag in t['hashtags']]) - seen_tags
             seen_tags = seen_tags.union(tags)
             tag_rels = [{'tweet_id': t['id'], 'tag': tag.upper()} for t in tweets for tag in t['hashtags']]
             p.set_description(f"Processing {p.n}/{p.total} (merge {len(tags)} new tags)")            
